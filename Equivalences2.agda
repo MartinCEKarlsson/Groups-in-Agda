@@ -177,5 +177,5 @@ module _ {α β : ULevel} {X : Set α} {Y : Set β} (f : X → Y) where
      contractible fibers equivalence.
   -}
   postulate
-    contr-fibers-hae : is-hae → is-equiv
+    is-hae→is-equiv : is-hae → is-equiv
     is-equiv→is-hae : is-equiv → is-hae

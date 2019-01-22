@@ -52,7 +52,6 @@ symmetric x .x idp = idp
 ! : ∀ {α} {X : Set α} {x y : X} → (x == y) → (y == x)
 ! {α} {X} {x} {y} p = symmetric x y p
 
-
 {- The induction principle for equality is the function J defined
    below. This is called ind= in the HoTT book. -}
 J : ∀ {α} {X : Set α} (C : (x : X) → (y : X) → (p : x == y) → Set)
@@ -99,3 +98,21 @@ transitive {α} {X} {x} {y} {.y} p idp = p
 app= : ∀ {α} {A : Set α} {B : A → Set α} (f g : (a : A) → B a) →
            (f == g) → ((a : A) → f a == g a)
 app= f .f idp = λ a → idp
+
+{- Composition of two functions -}
+_∘_ : ∀ {i j k} {X : Set i} {Y : Set j} {Z : Set k}
+    (f : Y → Z) (g : X → Y)
+    → (X → Z)
+f ∘ g = λ x → f (g x)
+
+{- Action path using composed function is equal to nested action paths. -}
+ap-comp : ∀ {i j k} {X : Set i} {Y : Set j} {Z : Set k} {x x' : X}
+        (f : X → Y) (g : Y → Z) (p : x == x')
+        → (ap (g ∘ f) p) == ap g (ap f p)
+ap-comp f g idp = idp
+
+{- Action path over binary function. -}
+ap2 : ∀ {i j k} {X : Set i} {Y : Set j} {Z : Set k} {x x' : X} {y y' : Y}
+    (p : x == x') (q : y == y') {rel : X → Y → Z}
+    → rel x y == rel x' y'
+ap2 idp idp = idp

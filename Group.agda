@@ -6,9 +6,7 @@ open import Equivalences2
 open import Eq-reasoning
 
 
-{-
-This file draws heavily from the HOTT-library
--}
+{- This file draws heavily from the HOTT-library -}
 
 {- A type is an h-proposition or mere proposition if we can (uniformly) construct a path
    between any two points.
@@ -20,23 +18,6 @@ is-hprop X = (x y : X) → (x == y)
 is-hset : {ℓ : ULevel} (X : Set ℓ) → Set ℓ
 is-hset X = (x y : X) → is-hprop (x == y)
 
-{-
-hGroup : Set
-hGroup = Σ Set (λ Y → is-hset Y)
-
-record GroupStructure {i} (El : Set i) --(El-level : has-level 0 El)
-  : Set i where
-  constructor group-structure
-  field
-    ident  : El
-    inv    : El → El
-    comp   : El → El → El
-    unit-l : ∀ a → comp ident a == a
-    assoc  : ∀ a b c → comp (comp a b) c == comp a (comp b c)
-    inv-l  : ∀ a → (comp (inv a) a) == ident
--}
-
---record is-group {ℓ} (X : Set ℓ) (e : X) (_·_ : X → X → X) (i : X → X) : Set ℓ where
 record is-group {ℓ} (X : Set ℓ) (e : X) (_·_ : X → X → X) (i : X → X) : Set ℓ where
   field
     ass : ∀ a b c → ((a · b) · c) == (a · (b · c))
@@ -47,7 +28,6 @@ record is-group {ℓ} (X : Set ℓ) (e : X) (_·_ : X → X → X) (i : X → X)
 
   asdf : ∀ a → (a · e) == e → e == (a · e)
   asdf = λ a x → symmetric (a · e) e x
-
 
   e==e : e == e
   e==e =
@@ -76,11 +56,6 @@ open is-group
 
 record Group ℓ : Set (lsucc ℓ) where
   constructor group
---record Group c ℓ : Set where
---record Group c ℓ : Set (suc (c ⊹ ℓ)) where
-  --infix  8 _⁻¹
-  --infixl 7 _∙_
-  --infix  4 _≈_
   field
     U : Set ℓ
     e : U
@@ -91,13 +66,6 @@ record Group ℓ : Set (lsucc ℓ) where
 idf :  (X : Set ) → X → X
 idf X x = x
 
-{-
-preserves-comp : ∀ {i j} {A : Set i} {B : Set j}
-  (A-comp : A → A → A) (B-comp : B → B → B) (f : A → B)
-  → Set (lmax i j)
-preserves-comp Ac Bc f = ∀ a₁ a₂ → f (Ac a₁ a₂) == Bc (f a₁) (f a₂)
--}
-
 record GroupHom {i j} (G : Group i) (H : Group j) : Set (lmax i j) where
   constructor group-hom
   private
@@ -106,8 +74,7 @@ record GroupHom {i j} (G : Group i) (H : Group j) : Set (lmax i j) where
   field
     f : G.U → H.U
     pres-comp : ∀ g₁ g₂ → f (G.comp g₁ g₂) == H.comp (f g₁) (f g₂)
-  --open GroupStructureHom {GS = G.group-struct} {HS = H.group-struct}
-  --  record {f = f ; pres-comp = pres-comp} hiding (f ; pres-comp) public
+
 infix 0 _→ᴳ_
 _→ᴳ_ = GroupHom
 
@@ -115,18 +82,43 @@ _≃ᴳ_ : ∀ {i j} (G : Group i) (H : Group j) → Set (lmax i j)
 G ≃ᴳ H = Σ (G →ᴳ H) (λ φ → is-equiv (GroupHom.f φ))
 infix 100 _≃ᴳ_
 module _≃ᴳ_ {i j} {G : Group i} {H : Group j} (iso : G ≃ᴳ H) where
-  --constructor c
+
+  open Group H renaming (comp to _×ᴴ_)
+  open Group G renaming (comp to _×ᴳ_)
+  open GroupHom (Σ.fst iso)
+  open is-hae (is-equiv→is-hae f (Σ.snd iso))
+
+  preserves-comp : (a' b' : Group.U H) → g (Group.comp H a' b') == Group.comp G (g a') (g b')
+  preserves-comp a' b' =
+    begin
+      g (a' ×ᴴ b')
+    ==⟨ ap g (ap2 (! (f-g a')) (! (f-g b')) {_×ᴴ_}) ⟩
+      g ((f (g a')) ×ᴴ (f (g b')))
+    ==⟨ ap g (! (pres-comp (g a') (g b'))) ⟩
+      g (f ((g a') ×ᴳ (g b')))
+    ==⟨ g-f (((g a') ×ᴳ (g b'))) ⟩
+      (g a') ×ᴳ (g b')
+    ∎
+
+  g-hom : H →ᴳ G
+  g-hom = group-hom g preserves-comp
 
   f-hom : G →ᴳ H
   f-hom = Σ.fst iso
 
-  g-hom : H →ᴳ G
-  g-hom = group-hom (is-hae.g (is-equiv→is-hae (GroupHom.f (f-hom)) (Σ.snd iso))) {!   !}
+  adj' : (a' : Group.U H) → ap g (f-g a') == g-f (g a')
+  adj' a' = proof
+    (Group.proof G)
+    (g (f (g a')))
+    (g a')
+    (ap g (f-g a'))
+    (g-f (g a'))
 
   sym : (H ≃ᴳ G)
-  sym = ?
--- lemma : ∀ {i j} (G : Group i) (H : Group j) → (G ≃ᴳ H) → (H →ᴳ G)
--- lemma G H x = group-hom (λ x₁ → Group.e G) (λ g₁ g₂ → e==e·e {! G  !})
+  sym = g-hom , is-hae→is-equiv g (record { g = f
+                                          ; f-g = g-f
+                                          ; g-f = f-g
+                                          ; adj = adj' })
 
 –>ᴳ : ∀ {i j} {G : Group i} {H : Group j} → (iso : G ≃ᴳ H) → (G →ᴳ H)
 –>ᴳ = _≃ᴳ_.f-hom
@@ -135,12 +127,4 @@ module _≃ᴳ_ {i j} {G : Group i} {H : Group j} (iso : G ≃ᴳ H) where
 <–ᴳ = _≃ᴳ_.g-hom
 
 sym : ∀ {i j} (G : Group i) (H : Group j) → (G ≃ᴳ H) → (H ≃ᴳ G)
-sym G H x = {!   !} , {!   !}
-
-
-postulate
-  pro : {x y : ⊤} {p q : x == y} → p == q
-
-
-⊤-is-group : is-group ⊤ unit (λ x y → unit) (λ x → unit)
-⊤-is-group = record { ass = λ a b c → idp ; is-unit = λ a → idp ; inv₁ = λ a → idp ; inv₂ = λ a → idp ; proof = λ x y x₁ y₁ → pro }
+sym G H x = _≃ᴳ_.sym x
