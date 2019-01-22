@@ -122,6 +122,9 @@ module _≃ᴳ_ {i j} {G : Group i} {H : Group j} (iso : G ≃ᴳ H) where
 
   g-hom : H →ᴳ G
   g-hom = group-hom (is-hae.g (is-equiv→is-hae (GroupHom.f (f-hom)) (Σ.snd iso))) {!   !}
+
+  sym : (H ≃ᴳ G)
+  sym = ?
 -- lemma : ∀ {i j} (G : Group i) (H : Group j) → (G ≃ᴳ H) → (H →ᴳ G)
 -- lemma G H x = group-hom (λ x₁ → Group.e G) (λ g₁ g₂ → e==e·e {! G  !})
 
