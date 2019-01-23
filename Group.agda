@@ -83,7 +83,7 @@ record Group ℓ : Set (lsucc ℓ) where
 idf :  (X : Set ) → X → X
 idf X x = x
 
-record is-subgroup {i j} (G : Group i) : Set (lmax (lsucc j) i) where
+record Subgrp {i j} (G : Group i) : Set (lmax (lsucc j) i) where
   private
     module G = Group G
   field
@@ -91,6 +91,13 @@ record is-subgroup {i j} (G : Group i) : Set (lmax (lsucc j) i) where
     f : ∀ {a : G.U} → is-hprop( prop a)
     id : prop G.e
     comp : ∀ {a b : G.U} → prop a → prop b → prop (G.comp a b)
+
+{- Normal subgroups : -}
+is-normal : {ℓ : ULevel} {Grp : Group ℓ} → (Subgrp {ℓ} {ℓ} Grp) → Set ℓ
+is-normal {ℓ} {Grp} H = (g : U) → (h : U) → prop h → prop (g ×ᴳ (h ×ᴳ (i g)))
+  where 
+    open Group Grp renaming (comp to _×ᴳ_)
+    open Subgrp H renaming (comp to _×ᴴ_)
 
 record GroupHom {i j} (G : Group i) (H : Group j) : Set (lmax i j) where
   constructor group-hom
@@ -164,3 +171,51 @@ sym G H x = _≃ᴳ_.sym x
 
 ==a : ∀ {i} {G : Group i} {H : Group i} → (G ≃ᴳ H) → (H == G)
 ==a = {!   !}
+
+{- We prove the following lemma: every homomorphism maps the identity to the identity -}
+id-to-id : {i : ULevel} {G H : Group i} → (f : G →ᴳ H) → (GroupHom.f f (Group.e G) == Group.e H)
+id-to-id = {!!}
+
+{- From a proof that two groups are equal (G == H), we obtain a map from Subgrp G to Subgrp H using transport -}
+transp-subgrp : {i : ULevel} {G H : Group i} (p : G == H) → (Subgrp {i} {i} G) → (Subgrp {i} {i} H)
+transp-subgrp p G' = transport Subgrp p G'
+
+{- We now use another way of finding a map from Subgrp G to Subgrp H using the identity -}
+{- firstly, we define the map idtoiso which takes an equality to an isomorphism in the trivial way -}
+idtoiso : ∀ {i} {G H : Group i} → (G == H) → (G ≃ᴳ H)
+idtoiso {i} {G} {.G} idp = →ᴳ-id , (λ y → build-is-contr (y , idp) (λ {(x , idp) → idp}))
+
+{- We 'lift' this isomorphism resulting from p to a map Subgrp G → Subgrp H -}
+idtoiso-subgrp : {i : ULevel} {G H : Group i} (p : G == H) → (Subgrp {i} {i} G) → (Subgrp {i} {i} H)
+idtoiso-subgrp {i} {G} {H} p G' = record { prop = λ x → Subgrp.prop G' (θ-inv(x)) ; f = Subgrp.f G' ; id = {!!}  ; comp = {!!} }
+  where
+    open Group H renaming (comp to _×ᴴ_)
+    open Group G renaming (comp to _×ᴳ_)
+
+    equiv : (G ≃ᴳ H) -- The equivalence
+    equiv = idtoiso p
+
+    open GroupHom (Σ.fst equiv)
+
+    θ : (Group.U G → Group.U H)   -- The forward map of the equivalence
+    θ = GroupHom.f (Σ.fst equiv)
+
+    open is-hae (is-equiv→is-hae θ (Σ.snd equiv))
+
+    θ-inv : (Group.U H → Group.U G)  -- The backward map of the equivalence
+    θ-inv = g
+
+{- We want to prove that the previous two functions Subgrp G → Subgrp H are homotopic -}
+trans-equiv-idtoiso : {i : ULevel} (G H : Group i) → transp-subgrp {i} {G} {H} == idtoiso-subgrp {i} {G} {H}
+trans-equiv-idtoiso = {!!}
+
+
+{- We are working towards the following claim: all definable subgroups are normal -}
+def-subgroups-are-normal : {ℓ : ULevel} {G : Group ℓ} (f : (G : Group ℓ) → (Subgrp {ℓ} {ℓ} G)) → (H : Group ℓ) → (is-normal (f H))
+def-subgroups-are-normal f H = {!!}
+
+
+
+
+
+
