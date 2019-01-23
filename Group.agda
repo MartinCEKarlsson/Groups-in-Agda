@@ -4,9 +4,8 @@ open import PropositionsAsTypes
 open import Agda.Primitive renaming (_⊔_ to lmax ; Level to ULevel ; lsuc to lsucc)
 open import Equivalences2
 open import Eq-reasoning
---open import lib.Basics
+open import Univalence
 
--- test
 {- This file draws heavily from the HOTT-library -}
 
 {- A type is an h-proposition or mere proposition if we can (uniformly) construct a path
@@ -22,7 +21,7 @@ is-hset X = (x y : X) → is-hprop (x == y)
 
 
 
-record is-group {ℓ} (X : Set ℓ) (e : X) (_·_ : X → X → X) (i : X → X) : Set ℓ where
+record is-group {ℓ} (X : Set ℓ) : Set ℓ where
   field
     {-
     A group G is an algebra hG; ·; −1; 1i with a binary, a unary, and
@@ -37,6 +36,10 @@ record is-group {ℓ} (X : Set ℓ) (e : X) (_·_ : X → X → X) (i : X → X)
     2. There exists a left identity e in G such that ex = x for all x 2 G.
     3. For each a 2 G there exists a left inverse a0 2 G such that a0a = e
     -}
+
+    e : X
+    _·_ : X → X → X
+    i : X → X
     ass : ∀ a b c → ((a · b) · c) == (a · (b · c))
     is-unit : ∀ a → (a · e) == e
     inv₁ : ∀ a → ((i a) · a) == e
@@ -78,10 +81,10 @@ record Group ℓ : Set (lsucc ℓ) where
     e : U
     comp : U → U → U
     i : U → U
-    proof : is-group U e comp i
+    proof : is-group U
 
-idf :  (X : Set ) → X → X
-idf X x = x
+idf : ∀ {i} {X : Set i} → (X → X)
+idf X = X
 
 record is-subgroup {i j} (G : Group i) : Set (lmax (lsucc j) i) where
   private
@@ -160,7 +163,76 @@ module _≃ᴳ_ {i j} {G : Group i} {H : Group j} (iso : G ≃ᴳ H) where
 <–ᴳ = _≃ᴳ_.g-hom
 
 sym : ∀ {i j} (G : Group i) (H : Group j) → (G ≃ᴳ H) → (H ≃ᴳ G)
-sym G H x = _≃ᴳ_.sym x
+sym G H = _≃ᴳ_.sym
 
-==a : ∀ {i} {G : Group i} {H : Group i} → (G ≃ᴳ H) → (H == G)
-==a = {!   !}
+idtoiso : ∀ {i} {G H : Group i} → (G == H) → (G ≃ᴳ H)
+idtoiso {i} {G} {.G} idp = →ᴳ-id , (λ y → build-is-contr (y , idp) (λ {(x , idp) → idp}))
+
+module Group-encode-decode {α β : ULevel} where
+  record Group-eq (G H : Group α) : Set (lsucc α ) where
+    constructor Group-eq-in
+    private
+      module G = Group G
+      module H = Group H
+    field
+      U-eq : G.U == H.U
+      e-eq : transport idf U-eq G.e == H.e
+      comp-eq : transport (λ x → x → x → x) U-eq G.comp == H.comp
+      i-eq : transport (λ x → x → x) U-eq G.i == H.i
+      proof-eq : transport (λ x → is-group x) U-eq G.proof == H.proof
+
+  encode : (G H : Group α) → (G == H) → Group-eq G H
+  encode G .G idp = Group-eq-in idp idp idp idp idp
+
+  decode : (G H : Group α) → (Group-eq G H) → G == H
+  decode (group .U .e .c .i .p) (group U e c i p) (Group-eq-in idp idp idp idp idp) = idp
+
+  f-g : (G H : Group α) → (eqv : Group-eq G H) → encode G H (decode G H eqv) == eqv
+  f-g (group U e c i p) (group .U .e .c .i .p) (Group-eq-in idp idp idp idp idp) = idp
+
+  g-f : (G H : Group α) → (p : G == H) → (decode G H (encode G H p) == p)
+  g-f G H idp = idp
+
+  Group-eq-qinv : (G H : Group α) → (qinv (encode G H))
+  Group-eq-qinv G H = record {g = decode G H ; f-g = f-g G H ; g-f = g-f G H}
+
+postulate
+  ua : ∀ {i} {A B : Set i} → (A ≃ B) → (A == B)
+
+module _ {i} {G H : Group i} (iso : G ≃ᴳ H) where
+  private
+    module G = Group G
+    module H = Group H
+    open GroupHom (Σ.fst iso)
+    open Group-encode-decode
+
+  abstract
+    isotoeq : Group-eq G H
+    isotoeq = Group-eq-in U-path
+                          e-path
+                          comp-path
+                          i-path
+                          proof-path
+      where
+        U-path : G.U == H.U
+        U-path = ua (f , Σ.snd iso)
+
+        e-path : transport idf U-path G.e == H.e
+        e-path =
+          begin
+            transport idf U-path G.e
+          ==⟨ {!  !} ⟩
+            H.e
+          ∎
+
+        comp-path : transport (λ x → x → x → x) U-path G.comp == H.comp
+        comp-path = {!   !}
+
+        i-path : transport (λ x → x → x) U-path G.i == H.i
+        i-path = {!   !}
+
+        proof-path : transport is-group U-path G.proof == H.proof
+        proof-path = {!   !}
+
+    isotoid : G == H
+    isotoid = decode G H isotoeq

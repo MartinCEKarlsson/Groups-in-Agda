@@ -173,9 +173,10 @@ module _ {α β : ULevel} {X : Set α} {Y : Set β} (f : X → Y) where
       g-f : (x : X) → (g (f x) == x)
       adj : (x : X) → ap f (g-f x) == f-g (f x)
 
-  {- Exercise 2: Show that if f is a half adjoint equivalence, then it is a
-     contractible fibers equivalence.
-  -}
+
   postulate
     is-hae→is-equiv : is-hae → is-equiv
     is-equiv→is-hae : is-equiv → is-hae
+
+_≃_ : ∀ {α β} → (A : Set α) → (B : Set β) → Set (lmax α β)
+X ≃ Y = Σ (X → Y) is-equiv
