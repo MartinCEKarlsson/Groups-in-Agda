@@ -4,6 +4,7 @@ open import PropositionsAsTypes
 open import Agda.Primitive renaming (_⊔_ to lmax ; Level to ULevel ; lsuc to lsucc)
 open import Equivalences2
 open import Eq-reasoning
+--open import lib.Basics
 
 
 {- This file draws heavily from the HOTT-library -}
@@ -18,8 +19,24 @@ is-hprop X = (x y : X) → (x == y)
 is-hset : {ℓ : ULevel} (X : Set ℓ) → Set ℓ
 is-hset X = (x y : X) → is-hprop (x == y)
 
+
+
+
 record is-group {ℓ} (X : Set ℓ) (e : X) (_·_ : X → X → X) (i : X → X) : Set ℓ where
   field
+    {-
+    A group G is an algebra hG; ·; −1; 1i with a binary, a unary, and
+    nullary operation in which the following identities are true:
+    G1: x · (y · z) ≈ (x · y) · z
+    G2: x · 1 ≈ 1 · x ≈ x
+    G3: x · x−1 ≈ x−1 · x ≈ 1
+
+    Prove that we can weaken the axioms for a group (G; ∗) as
+    follows.
+    1. The binary operation is associative.
+    2. There exists a left identity e in G such that ex = x for all x 2 G.
+    3. For each a 2 G there exists a left inverse a0 2 G such that a0a = e
+    -}
     ass : ∀ a b c → ((a · b) · c) == (a · (b · c))
     is-unit : ∀ a → (a · e) == e
     inv₁ : ∀ a → ((i a) · a) == e
@@ -66,6 +83,15 @@ record Group ℓ : Set (lsucc ℓ) where
 idf :  (X : Set ) → X → X
 idf X x = x
 
+record is-subgroup {i j} (G : Group i) : Set (lmax (lsucc j) i) where
+  private
+    module G = Group G
+  field
+    prop : G.U → Set j
+    f : ∀ {a : G.U} → is-hprop( prop a)
+    id : prop G.e
+    comp : ∀ {a b : G.U} → prop a → prop b → prop (G.comp a b)
+
 record GroupHom {i j} (G : Group i) (H : Group j) : Set (lmax i j) where
   constructor group-hom
   private
@@ -77,6 +103,13 @@ record GroupHom {i j} (G : Group i) (H : Group j) : Set (lmax i j) where
 
 infix 0 _→ᴳ_
 _→ᴳ_ = GroupHom
+
+→ᴳ-id : ∀ {i} {G : Group i} → G →ᴳ G
+→ᴳ-id = group-hom (λ x → x) (λ g₁ g₂ → idp)
+
+→ᴳ-trans : ∀ {i j k} {G : Group i} {H : Group j} {J : Group k} → G →ᴳ H → H →ᴳ J → G →ᴳ J
+→ᴳ-trans (group-hom g p) (group-hom h q) =
+  group-hom (λ z → h (g z)) (λ a b → transitive (ap h (p a b)) (q (g a) (g b)))
 
 _≃ᴳ_ : ∀ {i j} (G : Group i) (H : Group j) → Set (lmax i j)
 G ≃ᴳ H = Σ (G →ᴳ H) (λ φ → is-equiv (GroupHom.f φ))
@@ -128,3 +161,6 @@ module _≃ᴳ_ {i j} {G : Group i} {H : Group j} (iso : G ≃ᴳ H) where
 
 sym : ∀ {i j} (G : Group i) (H : Group j) → (G ≃ᴳ H) → (H ≃ᴳ G)
 sym G H x = _≃ᴳ_.sym x
+
+==a : ∀ {i} {G : Group i} {H : Group i} → (G ≃ᴳ H) → (H == G)
+==a = {!   !}
