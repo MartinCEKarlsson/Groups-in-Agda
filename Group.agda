@@ -477,29 +477,29 @@ idtoiso {i} {G} {.G} idp = →ᴳ-id , (λ y → build-is-contr (y , idp) (λ {(
 
 {- We 'lift' this isomorphism resulting from p to a map Subgrp G → Subgrp H -}
 idtoiso-subgrp : {i : ULevel} {G H : Group i} (p : G == H) → (Subgrp {i} {i} G) → (Subgrp {i} {i} H)
-idtoiso-subgrp {i} {G} {H} p G' = record { prop = λ x → Subgrp.prop G' (θ-inv(x)) ; f = Subgrp.f G' ; id = {!  !}  ; comp = {!  !} }
-  where
-    open Group H renaming (comp to _×ᴴ_)
-    open Group G renaming (comp to _×ᴳ_)
-
-    equiv : (G ≃ᴳ H) -- The equivalence
-    equiv = idtoiso p
-
-    open GroupHom (Σ.fst equiv)
-
-    θ : (Group.U G → Group.U H)   -- The forward map of the equivalence
-    θ = GroupHom.f (Σ.fst equiv)
-
-    open is-hae (is-equiv→is-hae θ (Σ.snd equiv))
-
-    θ-inv : (Group.U H → Group.U G)  -- The backward map of the equivalence
-    θ-inv = g
+idtoiso-subgrp {i} {G} {.G} idp G' = G' -- We can actually just case split!
+-- idtoiso-subgrp {i} {G} {H} p G' = record { prop = λ x → Subgrp.prop G' (θ-inv(x)) ; f = Subgrp.f G' ; id = {! !} ; comp = {! p  !} }
+  -- where
+  --   module H = Group H
+  --   module G = Group G
+  --
+  --   equiv : (G ≃ᴳ H) -- The equivalence
+  --   equiv = idtoiso p
+  --
+  --   open GroupHom (Σ.fst equiv)
+  --
+  --   θ : (G.U → H.U)   -- The forward map of the equivalence
+  --   θ = GroupHom.f (Σ.fst equiv)
+  --
+  --   open is-hae (is-equiv→is-hae θ (Σ.snd equiv))
+  --
+  --   θ-inv : (H.U → G.U)  -- The backward map of the equivalence
+  --   θ-inv = g
 
 {- We want to prove that the previous two functions Subgrp G → Subgrp H are homotopic -}
 trans-equiv-idtoiso : {i : ULevel} (G H : Group i) → transp-subgrp {i} {G} {H} == idtoiso-subgrp {i} {G} {H}
-trans-equiv-idtoiso = {!  !}
-
+trans-equiv-idtoiso {i} G H = funext transp-subgrp idtoiso-subgrp (λ {idp → idp})
 
 {- We are working towards the following claim: all definable subgroups are normal -}
-def-subgroups-are-normal : {ℓ : ULevel} {G : Group ℓ} (f : (G : Group ℓ) → (Subgrp {ℓ} {ℓ} G)) → (H : Group ℓ) → (is-normal (f H))
-def-subgroups-are-normal f H = {!  !}
+def-subgroups-are-normal : {ℓ : ULevel} (f : (G : Group ℓ) → (Subgrp {ℓ} {ℓ} G)) → (H : Group ℓ) → (is-normal (f H))
+def-subgroups-are-normal f H g h hprop = {!   !}
