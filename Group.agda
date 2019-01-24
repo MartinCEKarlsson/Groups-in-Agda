@@ -118,20 +118,68 @@ record GroupHom {i j} (G : Group i) (H : Group j) : Set (lmax i j) where
   private
     module G = Group G
     module H = Group H
+    _·ᴳ_ = G.comp
+    _·ᴴ_ = H.comp
+
   field
     f : G.U → H.U
     pres-comp : ∀ g₁ g₂ → f (G.comp g₁ g₂) == H.comp (f g₁) (f g₂)
 
+  private
+    prod-with-inv : (x y : G.U) → f (x ·ᴳ (G.i y)) == ((f x) ·ᴴ H.i (f y))
+    prod-with-inv x y =
+      begin
+        f (x ·ᴳ (G.i y))
+      ==⟨ ! (H.unit-r (f (x ·ᴳ (G.i y)))) ⟩
+        (f (x ·ᴳ (G.i y))) ·ᴴ H.e
+      ==⟨ ap (λ φ → ((f (x ·ᴳ (G.i y)))) ·ᴴ φ) (! (H.inv-r (f y))) ⟩
+        (f (x ·ᴳ (G.i y))) ·ᴴ ((f y) ·ᴴ (H.i (f y)))
+      ==⟨ ! (H.ass (f (x ·ᴳ (G.i y))) (f y) (H.i (f y))) ⟩
+        ((f (x ·ᴳ (G.i y))) ·ᴴ (f y)) ·ᴴ (H.i (f y))
+      ==⟨ ap (λ φ → φ ·ᴴ H.i (f y)) lemma ⟩
+        (f x) ·ᴴ (H.i (f y))
+      ∎
+      where
+        lemma : ((f (x ·ᴳ (G.i y))) ·ᴴ (f y)) == (f x)
+        lemma =
+          begin
+            ((f (x ·ᴳ (G.i y))) ·ᴴ (f y))
+          ==⟨ ! (pres-comp (x ·ᴳ (G.i y)) y) ⟩
+            f ((x ·ᴳ (G.i y)) ·ᴳ y)
+          ==⟨ ap f (G.ass x (G.i y) y) ⟩
+            f (x ·ᴳ ((G.i y) ·ᴳ y))
+          ==⟨ ap (λ φ → f (x ·ᴳ φ)) (G.inv-l y) ⟩
+            f (x ·ᴳ G.e)
+          ==⟨ ap f (G.unit-r x) ⟩
+            f x
+          ∎
+
   abstract
+    {- We prove the following lemma: every homomorphism maps the identity to the identity -}
+    id-to-id : (f G.e == H.e)
+    id-to-id =
+        begin
+          f G.e
+        ==⟨ ap f (! (G.inv-r G.e)) ⟩
+          f (G.e ·ᴳ (G.i G.e))
+        ==⟨ prod-with-inv G.e G.e ⟩
+          (f G.e) ·ᴴ (H.i (f G.e))
+        ==⟨ H.inv-r (f G.e) ⟩
+          H.e
+        ∎
+
+    {- Preserves inverse -}
     pres-i : ∀ g → f (G.i g) == H.i (f g)
     pres-i g =
       begin
         f (G.i g)
-      ==⟨ ap {!   !} {!   !} ⟩
-      f (G.comp G.e (G.i g))
-      ==⟨ {!   !} ⟩
-        H.comp (f G.e) (H.i (f g))
-      ==⟨ {!   !} ⟩
+      ==⟨ ap f (! (G.unit-l (G.i g))) ⟩
+        f (G.e ·ᴳ (G.i g))
+      ==⟨ prod-with-inv G.e g ⟩
+        (f G.e) ·ᴴ (H.i (f g))
+      ==⟨ ap (λ φ → φ ·ᴴ (H.i (f g))) id-to-id ⟩
+        H.e ·ᴴ H.i (f g)
+      ==⟨ H.unit-l (H.i (f g)) ⟩
         H.i (f g)
       ∎
 
@@ -195,55 +243,6 @@ module _≃ᴳ_ {i j} {G : Group i} {H : Group j} (iso : G ≃ᴳ H) where
 
 sym : ∀ {i j} (G : Group i) (H : Group j) → (G ≃ᴳ H) → (H ≃ᴳ G)
 sym G H = _≃ᴳ_.sym
-
-module _ {i : ULevel} {G H : Group i} (fhom : G →ᴳ H) where
-  private
-    open GroupHom fhom
-    module G = Group G
-    module H = Group H
-    _·ᴳ_ = G.comp
-    _·ᴴ_ = H.comp
-
-  prod-with-inv : (x y : G.U) → f (x ·ᴳ (G.i y)) == ((f x) ·ᴴ H.i (f y))
-  prod-with-inv x y =
-      begin
-        f (x ·ᴳ (G.i y))
-      ==⟨ ! (H.unit-r (f (x ·ᴳ (G.i y)))) ⟩
-        (f (x ·ᴳ (G.i y))) ·ᴴ H.e
-      ==⟨ ap (λ φ → ((f (x ·ᴳ (G.i y)))) ·ᴴ φ) (! (H.inv-r (f y))) ⟩
-        (f (x ·ᴳ (G.i y))) ·ᴴ ((f y) ·ᴴ (H.i (f y)))
-      ==⟨ ! (H.ass (f (x ·ᴳ (G.i y))) (f y) (H.i (f y))) ⟩
-        ((f (x ·ᴳ (G.i y))) ·ᴴ (f y)) ·ᴴ (H.i (f y))
-      ==⟨ ap (λ φ → φ ·ᴴ H.i (f y)) lemma ⟩
-        (f x) ·ᴴ (H.i (f y))
-      ∎
-      where
-        lemma : ((f (x ·ᴳ (G.i y))) ·ᴴ (f y)) == (f x)
-        lemma =
-          begin
-            ((f (x ·ᴳ (G.i y))) ·ᴴ (f y))
-          ==⟨ ! (pres-comp (x ·ᴳ (G.i y)) y) ⟩
-            f ((x ·ᴳ (G.i y)) ·ᴳ y)
-          ==⟨ ap f (G.ass x (G.i y) y) ⟩
-            f (x ·ᴳ ((G.i y) ·ᴳ y))
-          ==⟨ ap (λ φ → f (x ·ᴳ φ)) (G.inv-l y) ⟩
-            f (x ·ᴳ G.e)
-          ==⟨ ap f (G.unit-r x) ⟩
-            f x
-          ∎
-
-  {- We prove the following lemma: every homomorphism maps the identity to the identity -}
-  id-to-id : (f G.e == H.e)
-  id-to-id =
-      begin
-        f G.e
-      ==⟨ ap f (! (G.inv-r G.e)) ⟩
-        f (G.e ·ᴳ (G.i G.e))
-      ==⟨ prod-with-inv G.e G.e ⟩
-        (f G.e) ·ᴴ (H.i (f G.e))
-      ==⟨ H.inv-r (f G.e) ⟩
-        H.e
-      ∎
 
 {- We want some sort of convenient equivalence for is-group records. -}
 module is-group-encode-decode {α : ULevel} {X : Set α} where
