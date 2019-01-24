@@ -363,6 +363,46 @@ module _ {i} {G H : Group i} (iso : G ≃ᴳ H) where
       H
     ∎
 
+{- In this module, we prove some basic facts about the operation of a group G -}
+module _ {ℓ : ULevel} {G : Group ℓ} where
+  open Group G renaming (comp to _×ᴳ_)
+
+  {- Lemma : group computation is a congruence -}
+  comp-is-congr : {a b x y : U} → (a == b) → (x == y) → ((a ×ᴳ x) == (b ×ᴳ y))
+  comp-is-congr idp idp = idp
+
+
+  {- Lemma: group equations have unique solutions. That is, if ax = b, then x = (i a) b -}
+  eq-sol : {a b x : U} →  ((a ×ᴳ x) == b) → (x == ((Group.i G a) ×ᴳ b))
+  eq-sol idp = path1 ∙ (path2 ∙ path3)
+    where
+      path1 : {x a : U} → x == (Group.e G ×ᴳ x)
+      path1 {x} {a} = ! (Group.unit-l G x)
+
+      path2 : {x a : U} → ((Group.e G ×ᴳ x) == (((Group.i G a) ×ᴳ a) ×ᴳ x))
+      path2 {x} {a} = comp-is-congr (! (Group.inv-l G a)) idp
+
+      path3 : {x a : U} → ( ((Group.i G a) ×ᴳ a) ×ᴳ x) == (Group.i G a ×ᴳ (a ×ᴳ x)) 
+      path3 {x} {a} = Group.ass G (Group.i G a) a x
+
+{- Lemma : every homomorphism maps the identity to the identity -}
+{-
+id-to-id : {ℓ : ULevel} {G H : Group ℓ} → (f : G →ᴳ H) → (GroupHom.f f (Group.e G) == Group.e H)
+id-to-id {ℓ} {G} {H} (group-hom f pres-comp) =
+    begin
+      f G.e
+    ==⟨ {!   !} ⟩
+      H.e
+    ∎
+  where
+    module G = Group G
+    module H = Group H
+-}
+
+{- We prove the lemma that if a equals b and Prop a, then also Prop b for subgroups -}
+Prop-equality : {i : ULevel} {G : Group i} {a b : Group.U G} →  (H : Subgrp {i} {i} G) → (a == b) → Subgrp.prop H a → Subgrp.prop H b
+Prop-equality H idp as = as
+
 {- From a proof that two groups are equal (G == H), we obtain a map from Subgrp G to Subgrp H using transport -}
 transp-subgrp : {i : ULevel} {G H : Group i} (p : G == H) → (Subgrp {i} {i} G) → (Subgrp {i} {i} H)
 transp-subgrp p G' = transport Subgrp p G'
