@@ -28,9 +28,8 @@ record is-group {ℓ} (X : Set ℓ) : Set ℓ where
     _·_ : X → X → X
     i : X → X
     ass : ∀ a b c → ((a · b) · c) == (a · (b · c))
-    is-unit : ∀ a → (a · e) == e
-    inv₁ : ∀ a → ((i a) · a) == e
-    inv₂ : ∀ a → (a · (i a)) == e
+    unit-l : ∀ a → (e · a) == a
+    inv-l : ∀ a → ((i a) · a) == e
     set : is-hset X
 
   private
@@ -47,10 +46,47 @@ record is-group {ℓ} (X : Set ℓ) : Set ℓ where
     e==e·e =
       begin
         e
-      ==⟨ ! (is-unit e) ⟩
+      ==⟨ ! (unit-l e) ⟩
         e · e
       ∎
 
+    inv-r : ∀ a → (a · (i a)) == e
+    inv-r a =
+      begin
+      a · (i a)
+      ==⟨ ! (unit-l (a · (i a))) ⟩
+      e · (a · (i a))
+      ==⟨ ! (ass e a (i a) ) ⟩
+      (e · a) · (i a)
+      ==⟨ transport (λ y → ((e · a) · (i a)) == ((y · a) · (i a))) (! (inv-l (i a))) idp ⟩
+      (((i (i a)) · (i a) ) · a) · (i a)
+      ==⟨ transport (λ y → ( (((i (i a)) · (i a) ) · a) · (i a) ) == (y · (i a))) (ass (i (i a)) (i a) a) idp ⟩
+      ((i (i a)) · ((i a)  · a)) · (i a)
+      ==⟨ transport (λ y →  (((i (i a)) · ((i a)  · a)) · (i a)) == (((i (i a)) · y) · (i a))) (inv-l a) idp ⟩
+      ((i (i a)) · e) · (i a)
+      ==⟨  ass (i (i a)) e (i a) ⟩
+      (i (i a)) · ( e · (i a))
+      ==⟨ transport (λ y → ((i (i a)) · (e · (i a))) == ((i (i a)) · y ) ) (unit-l (i a)) idp ⟩
+      (i (i a)) · (i a)
+      ==⟨ inv-l (i a) ⟩
+      e
+      ∎
+
+    unit-r : ∀ a → (a · e) == a
+    unit-r a =
+      begin
+      a · e
+      ==⟨ transport (λ y → (a · e) == (a · y)) (! (inv-l a)) idp ⟩
+      a · ( (i a) · a)
+      ==⟨ ! (ass a (i a) a) ⟩
+      (a · (i a)) · a
+      ==⟨ transport (λ y → ((a · (i a)) · a) == (y · a)) (inv-r a) idp ⟩
+      e · a
+      ==⟨ unit-l a ⟩
+      a
+      ∎
+
+open is-group
 
 record Group ℓ : Set (lsucc ℓ) where
   constructor group
@@ -166,16 +202,12 @@ module is-group-encode-decode {α : ULevel} {X : Set α} where
              → (x₁ x₂ x₃ : X) → ((x₁ · x₂) · x₃) == (x₁ · (x₂ · x₃))
       ass-tp = transport (λ x → (x₁ x₂ x₃ : X) → x (x x₁ x₂) x₃ == x x₁ (x x₂ x₃)) comp-eq
 
-      is-unit-tp : ((x : X) → (x G.· G.e) == G.e) → (x : X) → (x · H.e) == H.e
-      is-unit-tp = transport2 (λ z z₁ → (x : X) → z₁ x z == z) e-eq comp-eq
+      unit-l-tp : ((x : X) → (x G.· G.e) == G.e) → (x : X) → (x · H.e) == H.e
+      unit-l-tp = transport2 (λ z z₁ → (x : X) → z₁ x z == z) e-eq comp-eq
 
-      inv₁-tp : ((x : X) → (G.i x G.· x) == G.e) → (x : X) → (H.i x · x) == H.e
-      inv₁-tp = transport3 (λ z z₁ z₂ → (x : X) → z₂ (z x) x == z₁) i-eq e-eq
+      inv-l-tp : ((x : X) → (G.i x G.· x) == G.e) → (x : X) → (H.i x · x) == H.e
+      inv-l-tp = transport3 (λ z z₁ z₂ → (x : X) → z₂ (z x) x == z₁) i-eq e-eq
         comp-eq
-
-      inv₂-tp : ((x : X) → (x G.· G.i x) == G.e) → (x : X) → (x · H.i x) == H.e
-      inv₂-tp = transport3 (λ z z₁ z₂ → (x : X) → z₂ x (z x) == z₁) i-eq e-eq
-          comp-eq
 
       all-paths : ∀ {x y : X} → (p q : x == y) → (p == q)
       all-paths {x} {y} = λ p q → H.set x y p q
@@ -193,16 +225,13 @@ module is-group-encode-decode {α : ULevel} {X : Set α} where
                                H.ass
 
       {- The following need some sort of nested transport.. -}
-      is-unit-eq : is-unit-tp G.is-unit == H.is-unit
-      is-unit-eq = hprop-dep-prod (λ x → all-paths)
-                                  (is-unit-tp G.is-unit)
-                                  H.is-unit
+      unit-l-eq : unit-l-tp G.unit-l == H.unit-l
+      unit-l-eq = hprop-dep-prod (λ x → all-paths)
+                                  (unit-l-tp G.unit-l)
+                                  H.unit-l
 
-      inv₁-eq : inv₁-tp G.inv₁ == H.inv₁
-      inv₁-eq = hprop-dep-prod (λ x → all-paths) (inv₁-tp G.inv₁) H.inv₁
-
-      inv₂-eq : inv₂-tp G.inv₂ == H.inv₂
-      inv₂-eq = hprop-dep-prod (λ x → all-paths) (inv₂-tp G.inv₂) H.inv₂
+      inv-l-eq : inv-l-tp G.inv-l == H.inv-l
+      inv-l-eq = hprop-dep-prod (λ x → all-paths) (inv-l-tp G.inv-l) H.inv-l
 
   encode : (G H : is-group X) → (G == H) → is-group-eq G H
   encode G .G idp = is-group-eq-in idp idp idp
