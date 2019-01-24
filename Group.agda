@@ -44,31 +44,23 @@ record is-group {ℓ} (X : Set ℓ) : Set ℓ where
     is-unit : ∀ a → (a · e) == e
     inv₁ : ∀ a → ((i a) · a) == e
     inv₂ : ∀ a → (a · (i a)) == e
-    proof : is-hset X
+    set : is-hset X
 
-  asdf : ∀ a → (a · e) == e → e == (a · e)
-  asdf = λ a x → symmetric (a · e) e x
+  private
+    e==e : e == e
+    e==e =
+      begin
+        e
+      ==⟨ idp ⟩
+        e
+      ∎
 
-  e==e : e == e
-  e==e =
-    begin
-      e
-    ==⟨ idp ⟩
-      e
-    ∎
-
-
-  asdf2 : (e · e) == e → e == (e · e)
-  asdf2 = symmetric (e · e) e
-
-  asdf3 : e == (e · e)
-  asdf3 = asdf2 (is-unit e)
   abstract
     e==e·e : e == (e · e)
     e==e·e =
       begin
         e
-      ==⟨ asdf2 (is-unit e) ⟩
+      ==⟨ ! (is-unit e) ⟩
         e · e
       ∎
 
@@ -78,10 +70,8 @@ record Group ℓ : Set (lsucc ℓ) where
   constructor group
   field
     U : Set ℓ
-    e : U
-    comp : U → U → U
-    i : U → U
-    proof : is-group U
+    struct : is-group U
+  open is-group struct renaming (_·_ to comp) public
 
 idf : ∀ {i} {X : Set i} → (X → X)
 idf X = X
@@ -150,8 +140,8 @@ module _≃ᴳ_ {i j} {G : Group i} {H : Group j} (iso : G ≃ᴳ H) where
   f-hom = Σ.fst iso
 
   adj' : (a' : Group.U H) → ap g (f-g a') == g-f (g a')
-  adj' a' = proof
-    (Group.proof G)
+  adj' a' = set
+    (Group.struct G)
     (g (f (g a')))
     (g a')
     (ap g (f-g a'))
@@ -172,78 +162,130 @@ module _≃ᴳ_ {i j} {G : Group i} {H : Group j} (iso : G ≃ᴳ H) where
 sym : ∀ {i j} (G : Group i) (H : Group j) → (G ≃ᴳ H) → (H ≃ᴳ G)
 sym G H = _≃ᴳ_.sym
 
-module Group-encode-decode {α β : ULevel} where
-  record Group-eq (G H : Group α) : Set (lsucc α ) where
-    constructor Group-eq-in
+{- We want some sort of convenient equivalence for is-group records. -}
+module is-group-encode-decode {α : ULevel} {X : Set α} where
+  record is-group-eq  (G H : is-group X) : Set α where
+    constructor is-group-eq-in
     private
-      module G = Group G
-      module H = Group H
+      module G = is-group G
+      module H = is-group H
     field
-      U-eq : G.U == H.U
-      e-eq : transport idf U-eq G.e == H.e
-      comp-eq : transport (λ x → x → x → x) U-eq G.comp == H.comp
-      i-eq : transport (λ x → x → x) U-eq G.i == H.i
-      proof-eq : transport (λ x → is-group x) U-eq G.proof == H.proof
+      e-eq : G.e == H.e
+      comp-eq :  G._·_ == H._·_
+      i-eq :  G.i == H.i
 
-  encode : (G H : Group α) → (G == H) → Group-eq G H
-  encode G .G idp = Group-eq-in idp idp idp idp idp
+    {- The following paths can probably be deduced from the above and the fact
+       we are dealing with hsets. -}
+    abstract
+      {- We need to specify the following types: -}
+      set-eq : G.set == H.set
+      set-eq = {!   !} -- this should follow from the fact that all sets are props
 
-  decode : (G H : Group α) → (Group-eq G H) → G == H
-  decode (group .U .e .c .i .p) (group U e c i p) (Group-eq-in idp idp idp idp idp) = idp
+      ass-eq : transport
+        (λ x → (x₁ x₂ x₃ : X) → x (x x₁ x₂) x₃ == x x₁ (x x₂ x₃))
+        comp-eq G.ass == H.ass
+      ass-eq = {!   !}
 
-  f-g : (G H : Group α) → (eqv : Group-eq G H) → encode G H (decode G H eqv) == eqv
-  f-g (group U e c i p) (group .U .e .c .i .p) (Group-eq-in idp idp idp idp idp) = idp
+      {- The following need some sort of nested transport.. -}
+      is-unit-eq : transport ({!   !}) {!  !} G.is-unit == H.is-unit
+      is-unit-eq = {!   !}
+      inv₁-eq : transport {!   !} {!   !} G.inv₁ == H.inv₁
+      inv₁-eq = {!   !}
+      inv₂-eq : transport {!   !} {!   !} G.inv₂ == H.inv₂
+      inv₂-eq = {!   !}
 
-  g-f : (G H : Group α) → (p : G == H) → (decode G H (encode G H p) == p)
+  encode : (G H : is-group X) → (G == H) → is-group-eq G H
+  encode G .G idp = is-group-eq-in idp idp idp
+
+  {- Here we need to somehow use the 3 idps and the deduced paths.. -}
+  decode : (G H : is-group X) → (is-group-eq G H) → G == H
+  decode G H (is-group-eq-in idp idp idp) = {!   !}
+
+  f-g : (G H : is-group X) → (eqv : is-group-eq G H) → encode G H (decode G H eqv) == eqv
+  f-g G H (is-group-eq-in idp idp idp) = {!   !}
+
+  g-f : (G H : is-group X) → (p : G == H) → (decode G H (encode G H p) == p)
   g-f G H idp = idp
 
-  Group-eq-qinv : (G H : Group α) → (qinv (encode G H))
-  Group-eq-qinv G H = record {g = decode G H ; f-g = f-g G H ; g-f = g-f G H}
+  is-group-eq-qinv : (G H : is-group X) → (qinv (encode G H))
+  is-group-eq-qinv G H = record {g = decode G H ; f-g = f-g G H ; g-f = g-f G H}
 
+{- We need univalence to show that the two underlying universes are equal. -}
 postulate
   ua : ∀ {i} {A B : Set i} → (A ≃ B) → (A == B)
 
+{- Here we define the idtoiso type. -}
 module _ {i} {G H : Group i} (iso : G ≃ᴳ H) where
   private
     module G = Group G
     module H = Group H
     open GroupHom (Σ.fst iso)
-    open Group-encode-decode
+    module Genc = is-group-encode-decode
+    open Σ-encode-decode
 
-  abstract
-    isotoeq : Group-eq G H
-    isotoeq = Group-eq-in U-path
-                          e-path
-                          comp-path
-                          i-path
-                          proof-path
+    {- It will be more convenient to handle Σ types instead of Groups. -}
+    Σ-Group : Set (lsucc i)
+    Σ-Group = Σ (Set i) λ x → is-group x
+
+    Group→Σ : (G : Group i) → Σ-Group
+    Group→Σ (group U struct) = U , struct
+
+    Σ→Group : (Gs : Σ-Group) → Group i
+    Σ→Group (U , proof) = group U proof
+
+    {- They are the same thing anyway. -}
+    Group→Σ→Group==id : {G : Group i} → Σ→Group (Group→Σ G) == G
+    Group→Σ→Group==id = idp
+
+    {- If we can create a Σ-eq from the isomorphism we are basically done. -}
+    iso→Σ-eq : Σ-eq (Group→Σ G) (Group→Σ H)
+    iso→Σ-eq = Σ-eq-in U-path (Genc.decode G→H-tp H.struct
+                                (Genc.is-group-eq-in e-path comp-path i-path))
       where
+        open _≃ᴳ_ iso
+
         U-path : G.U == H.U
-        U-path = ua (f , Σ.snd iso)
+        U-path = ua (f , (Σ.snd iso))
 
-        e-path : transport idf U-path G.e == H.e
-        e-path =
-          begin
-            transport idf U-path G.e
-          ==⟨ {!  !} ⟩
-            H.e
-          ∎
+        G→H-tp : is-group H.U
+        G→H-tp = transport is-group U-path G.struct
 
-        comp-path : transport (λ x → x → x → x) U-path G.comp == H.comp
+        e-path : e G→H-tp == H.e
+        e-path = {!   !}
+
+        comp-path : _·_ G→H-tp == H.comp
         comp-path = {!   !}
 
-        i-path : transport (λ x → x → x) U-path G.i == H.i
+        i-path : is-group.i G→H-tp == H.i
         i-path = {!   !}
 
-        proof-path : transport is-group U-path G.proof == H.proof
-        proof-path = {!   !}
+    {- From the Σ-eq we get the required identity. -}
+    iso→Σid : Σ→Group (Group→Σ G) == Σ→Group (Group→Σ H)
+    iso→Σid = ap Σ→Group (decode (Group→Σ G) (Group→Σ H) iso→Σ-eq)
 
-    isotoid : G == H
-    isotoid = decode G H isotoeq
+  isotoid : G == H
+  isotoid =
+    begin
+      G
+    ==⟨ ! Group→Σ→Group==id ⟩
+      Σ→Group (Group→Σ G)
+    ==⟨ iso→Σid ⟩
+      Σ→Group (Group→Σ H)
+    ==⟨ Group→Σ→Group==id ⟩
+      H
+    ∎
 
 {- We prove the following lemma: every homomorphism maps the identity to the identity -}
 id-to-id : {i : ULevel} {G H : Group i} → (f : G →ᴳ H) → (GroupHom.f f (Group.e G) == Group.e H)
-id-to-id = {! !}
+id-to-id {i} {G} {H} (group-hom f pres-comp) =
+    begin
+      f G.e
+    ==⟨ {!   !} ⟩
+      H.e
+    ∎
+  where
+    module G = Group G
+    module H = Group H
 
 {- From a proof that two groups are equal (G == H), we obtain a map from Subgrp G to Subgrp H using transport -}
 transp-subgrp : {i : ULevel} {G H : Group i} (p : G == H) → (Subgrp {i} {i} G) → (Subgrp {i} {i} H)
@@ -256,7 +298,7 @@ idtoiso {i} {G} {.G} idp = →ᴳ-id , (λ y → build-is-contr (y , idp) (λ {(
 
 {- We 'lift' this isomorphism resulting from p to a map Subgrp G → Subgrp H -}
 idtoiso-subgrp : {i : ULevel} {G H : Group i} (p : G == H) → (Subgrp {i} {i} G) → (Subgrp {i} {i} H)
-idtoiso-subgrp {i} {G} {H} p G' = record { prop = λ x → Subgrp.prop G' (θ-inv(x)) ; f = Subgrp.f G' ; id = {! !}  ; comp = {! !} }
+idtoiso-subgrp {i} {G} {H} p G' = record { prop = λ x → Subgrp.prop G' (θ-inv(x)) ; f = Subgrp.f G' ; id = {!  !}  ; comp = {!  !} }
   where
     open Group H renaming (comp to _×ᴴ_)
     open Group G renaming (comp to _×ᴳ_)
@@ -276,9 +318,9 @@ idtoiso-subgrp {i} {G} {H} p G' = record { prop = λ x → Subgrp.prop G' (θ-in
 
 {- We want to prove that the previous two functions Subgrp G → Subgrp H are homotopic -}
 trans-equiv-idtoiso : {i : ULevel} (G H : Group i) → transp-subgrp {i} {G} {H} == idtoiso-subgrp {i} {G} {H}
-trans-equiv-idtoiso = {! !}
+trans-equiv-idtoiso = {!  !}
 
 
 {- We are working towards the following claim: all definable subgroups are normal -}
 def-subgroups-are-normal : {ℓ : ULevel} {G : Group ℓ} (f : (G : Group ℓ) → (Subgrp {ℓ} {ℓ} G)) → (H : Group ℓ) → (is-normal (f H))
-def-subgroups-are-normal f H = {! !}
+def-subgroups-are-normal f H = {!  !}
