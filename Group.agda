@@ -2,24 +2,11 @@
 open import Equality
 open import PropositionsAsTypes
 open import Agda.Primitive renaming (_⊔_ to lmax ; Level to ULevel ; lsuc to lsucc)
-open import Equivalences2
+open import Equivalences
 open import Eq-reasoning
-open import Univalence
+open import SetsAndProps
 
 {- This file draws heavily from the HOTT-library -}
-
-{- A type is an h-proposition or mere proposition if we can (uniformly) construct a path
-   between any two points.
--}
-is-hprop : {ℓ : ULevel} (X : Set ℓ) → Set ℓ
-is-hprop X = (x y : X) → (x == y)
-
-{- A type is an h-set if every identity type is an h-proposition. -}
-is-hset : {ℓ : ULevel} (X : Set ℓ) → Set ℓ
-is-hset X = (x y : X) → is-hprop (x == y)
-
-
-
 
 record is-group {ℓ} (X : Set ℓ) : Set ℓ where
   field
@@ -64,7 +51,6 @@ record is-group {ℓ} (X : Set ℓ) : Set ℓ where
         e · e
       ∎
 
-open is-group
 
 record Group ℓ : Set (lsucc ℓ) where
   constructor group
@@ -140,7 +126,7 @@ module _≃ᴳ_ {i j} {G : Group i} {H : Group j} (iso : G ≃ᴳ H) where
   f-hom = Σ.fst iso
 
   adj' : (a' : Group.U H) → ap g (f-g a') == g-f (g a')
-  adj' a' = set
+  adj' a' = is-group.set
     (Group.struct G)
     (g (f (g a')))
     (g a')
@@ -169,30 +155,54 @@ module is-group-encode-decode {α : ULevel} {X : Set α} where
     private
       module G = is-group G
       module H = is-group H
+      open is-group H using (_·_)
     field
       e-eq : G.e == H.e
       comp-eq :  G._·_ == H._·_
       i-eq :  G.i == H.i
+
+    private
+      ass-tp : ((x₁ x₂ x₃ : X) → ((x₁ G.· x₂) G.· x₃) == (x₁ G.· (x₂ G.· x₃)))
+             → (x₁ x₂ x₃ : X) → ((x₁ · x₂) · x₃) == (x₁ · (x₂ · x₃))
+      ass-tp = transport (λ x → (x₁ x₂ x₃ : X) → x (x x₁ x₂) x₃ == x x₁ (x x₂ x₃)) comp-eq
+
+      is-unit-tp : ((x : X) → (x G.· G.e) == G.e) → (x : X) → (x · H.e) == H.e
+      is-unit-tp = transport2 (λ z z₁ → (x : X) → z₁ x z == z) e-eq comp-eq
+
+      inv₁-tp : ((x : X) → (G.i x G.· x) == G.e) → (x : X) → (H.i x · x) == H.e
+      inv₁-tp = transport3 (λ z z₁ z₂ → (x : X) → z₂ (z x) x == z₁) i-eq e-eq
+        comp-eq
+
+      inv₂-tp : ((x : X) → (x G.· G.i x) == G.e) → (x : X) → (x · H.i x) == H.e
+      inv₂-tp = transport3 (λ z z₁ z₂ → (x : X) → z₂ x (z x) == z₁) i-eq e-eq
+          comp-eq
+
+      all-paths : ∀ {x y : X} → (p q : x == y) → (p == q)
+      all-paths {x} {y} = λ p q → H.set x y p q
 
     {- The following paths can probably be deduced from the above and the fact
        we are dealing with hsets. -}
     abstract
       {- We need to specify the following types: -}
       set-eq : G.set == H.set
-      set-eq = {!   !} -- this should follow from the fact that all sets are props
+      set-eq = is-hset-is-hprop G.set H.set
 
-      ass-eq : transport
-        (λ x → (x₁ x₂ x₃ : X) → x (x x₁ x₂) x₃ == x x₁ (x x₂ x₃))
-        comp-eq G.ass == H.ass
-      ass-eq = {!   !}
+      ass-eq : ass-tp G.ass == H.ass
+      ass-eq = hprop-dep-prod3 (λ x y z → all-paths)
+                               (ass-tp G.ass)
+                               H.ass
 
       {- The following need some sort of nested transport.. -}
-      is-unit-eq : transport ({!   !}) {!  !} G.is-unit == H.is-unit
-      is-unit-eq = {!   !}
-      inv₁-eq : transport {!   !} {!   !} G.inv₁ == H.inv₁
-      inv₁-eq = {!   !}
-      inv₂-eq : transport {!   !} {!   !} G.inv₂ == H.inv₂
-      inv₂-eq = {!   !}
+      is-unit-eq : is-unit-tp G.is-unit == H.is-unit
+      is-unit-eq = hprop-dep-prod (λ x → all-paths)
+                                  (is-unit-tp G.is-unit)
+                                  H.is-unit
+
+      inv₁-eq : inv₁-tp G.inv₁ == H.inv₁
+      inv₁-eq = hprop-dep-prod (λ x → all-paths) (inv₁-tp G.inv₁) H.inv₁
+
+      inv₂-eq : inv₂-tp G.inv₂ == H.inv₂
+      inv₂-eq = hprop-dep-prod (λ x → all-paths) (inv₂-tp G.inv₂) H.inv₂
 
   encode : (G H : is-group X) → (G == H) → is-group-eq G H
   encode G .G idp = is-group-eq-in idp idp idp
@@ -243,6 +253,7 @@ module _ {i} {G H : Group i} (iso : G ≃ᴳ H) where
                                 (Genc.is-group-eq-in e-path comp-path i-path))
       where
         open _≃ᴳ_ iso
+        open is-group
 
         U-path : G.U == H.U
         U-path = ua (f , (Σ.snd iso))

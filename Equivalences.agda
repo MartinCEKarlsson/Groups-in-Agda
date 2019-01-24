@@ -34,8 +34,8 @@ module Equivalences where
    of α and β, so that given types from Set α and Set β we can construct
    types in Set (lmax α β).
 -}
-postulate
-  ℓ : ULevel
+--postulate
+--  ℓ : ULevel
 
 {- Recall the definition of is-contr (is contractible) from last time. -}
 record is-contr {α : ULevel} (X : Set α) : Set α where
@@ -166,14 +166,6 @@ module _ {α β : ULevel} {X : Set α} {Y : Set β} (f : X → Y) where
                               ; h-f = qinv.g-f inv }
 
   {- Exercise 1: Show that if a function is a Joyal equivalence, then it has a quasi inverse. -}
-  jequiv-to-qinv : is-jequiv → qinv f
-  jequiv-to-qinv jinv = record { g = is-jequiv.g jinv ; f-g = is-jequiv.f-g jinv ;
-    g-f = λ x → ! (is-jequiv.h-f jinv (is-jequiv.g jinv (f x))) ∙ ap {!   !} {!   !}}
-  -- jequiv-to-qinv record { g = g ; f-g = f-g ; h = h ; h-f = h-f } =
-    --              record { g = g ; f-g = (λ x → f-g x) ; g-f = {! f-g qinv  !} }
-
-
-  {- Finally, we give the definition of half-adjoint equivalence. -}
   record is-hae : Set (lmax α β) where
     field
       g : Y → X
@@ -181,71 +173,10 @@ module _ {α β : ULevel} {X : Set α} {Y : Set β} (f : X → Y) where
       g-f : (x : X) → (g (f x) == x)
       adj : (x : X) → ap f (g-f x) == f-g (f x)
 
-  {- Exercise 2: Show that if f is a half adjoint equivalence, then it is a
-     contractible fibers equivalence.
-  -}
-  contr-fibers-hae : is-hae → is-equiv
-  contr-fibers-hae ih = {! !}
 
+  postulate
+    is-hae→is-equiv : is-hae → is-equiv
+    is-equiv→is-hae : is-equiv → is-hae
 
-  {- Recall from last time that every (contractible fibers) equivalence has a
-     quasi inverse.
-  -}
-  inverse-qinv : is-equiv → qinv f
-  inverse-qinv inv = record { g = λ y → Σ.fst (is-contr.center (inv y))
-                            ; f-g = λ y → Σ.snd (is-contr.center (inv y))
-                            ; g-f = λ x → ap Σ.fst (! (is-contr.path (inv (f x)) (x , idp))) }
-
-
-  {- Execise 3: Show that if f is a contractible fibers equivalence,
-     then it is a half adjoint equivalence.  -}
-  hae-contr-fibers : is-equiv → is-hae
-  hae-contr-fibers ha = {! !}
-
-
-record Equiv {α : ULevel} (X Y : Set α) : Set α  where
-  field
-    f : X → Y
-    f-is-equiv : is-equiv f
-
-_≃_ : (X Y : Set) → Set
-X ≃ Y = Equiv X Y
-
-{- We saw last time that the equivalence relation is reflexive (because identity
-   functions are equivalences). It is also symmetric and transitive.
--}
-
-_∘_ : {α β γ : ULevel} {X : Set α} {Y : Set β} {Z : Set γ} → (g : Y → Z) →
-      (f : X → Y) → (X → Z)
-g ∘ f = λ x → g (f x)
-
-{- Exercise 4: Show that is-equiv is transitive. -}
-compose-equiv : {α β γ : ULevel} {X : Set α} {Y : Set β} {Z : Set γ}
-                (g : Y → Z) (g-equiv : is-equiv g)
-                (f : X → Y) (f-equiv : is-equiv f) →
-                (is-equiv (g ∘ f))
-compose-equiv = {! !}
-
-
-
-{- Exercise 5: Show that is-hae is symmetric -}
-{- Hint: See Lemma 4.2.2 in the HoTT book. -}
-is-hae-sym-f : {α : ULevel} {X Y : Set α} → (f : X → Y) → (eq : is-hae f) → (Y → X)
-is-hae-sym-f f eq = {! !}
-
-is-hae-sym-hae : {α : ULevel} {X Y : Set α} → (f : X → Y) → (eq : is-hae f) →
-                 is-hae (is-hae-sym-f f eq)
-is-hae-sym-hae f eq = {! !}
-
-
-{- Homework -}
-
-{- Show that if f has a quasi inverse, then it is a half adjoint equivalence. -}
-
-{- Hint: This appears as Theorem 4.2.3 in the HoTT book. To help you translate between
-   them, f-g is written in the book as ε and g-f is written as η. If p : x == y is
-   a path in X, then ap f p is written just as f(p) in the book.
--}
-
-qinv-is-hae : {α β : ULevel} {X : Set α} {Y : Set β} (f : X → Y) → (qinv f) → (is-hae f)
-qinv-is-hae f inv = {! !}
+_≃_ : ∀ {α β} → (A : Set α) → (B : Set β) → Set (lmax α β)
+X ≃ Y = Σ (X → Y) is-equiv

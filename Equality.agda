@@ -33,6 +33,18 @@ transport : ∀ {α β} {X : Set α} (Y : X → Set β) {x y : X}
             (p : x == y) → (Y x) → (Y y)
 transport Y idp y = y
 
+{- Maybe this can be generalized somehow... -}
+transport2 : ∀ {α β γ} {X : Set α} {Y : Set β} (Z : X → Y → Set γ)
+             {x x' : X} {y y' : Y}
+             (p : x == x') (q : y == y') → (Z x y) → (Z x' y')
+transport2 Z idp idp x = x
+
+transport3 : ∀ {α β γ δ} {X : Set α} {Y : Set β} {Z : Set γ}
+             (F : X → Y → Z → Set δ) {x x' : X} {y y' : Y} {z z' : Z}
+             (p : x == x') (q : y == y') (r : z == z') → (F x y z) →
+             (F x' y' z')
+transport3 F idp idp idp x = x
+
 {- We construct a function from x == y to y == x by pattern matching.
    Note that we have written .x for the second argument. These is referred to
    as a "dot pattern" or "inaccessible pattern." It signifies that the second
