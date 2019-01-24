@@ -86,6 +86,35 @@ record is-group {ℓ} (X : Set ℓ) : Set ℓ where
       a
       ∎
 
+    solv : ∀ a b x → (x == ((i a) · b)) → ((a · x) == b)
+    solv a b x eq =
+      begin
+      (a · x)
+      ==⟨ substitute (λ y → a · y) eq ⟩
+      (a · ((i a) · b))
+      ==⟨ ! (ass a (i a) b) ⟩
+      ((a · (i a)) · b)
+      ==⟨ substitute (λ y → y · b) (inv-r a) ⟩
+      e · b
+      ==⟨ unit-l b ⟩
+      b
+      ∎
+
+    unique-solv : ∀ a b x → ((a · x) == b) → (x == ((i a) · b))
+    unique-solv a b x eq =
+      begin
+      x
+      ==⟨ ! (unit-l x) ⟩
+      e · x
+      ==⟨ substitute (λ y → y · x) (! (inv-l a)) ⟩
+      ((i a) · a) · x
+      ==⟨ ass (i a) a x ⟩
+      (i a) · (a · x)
+      ==⟨ substitute (λ y → (i a) · y) eq ⟩
+      (i a) · b
+      ∎
+
+
 
 record Group ℓ : Set (lsucc ℓ) where
   constructor group

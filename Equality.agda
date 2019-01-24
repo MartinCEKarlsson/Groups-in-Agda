@@ -33,6 +33,8 @@ transport : ∀ {α β} {X : Set α} (Y : X → Set β) {x y : X}
             (p : x == y) → (Y x) → (Y y)
 transport Y idp y = y
 
+
+
 {- Maybe this can be generalized somehow... -}
 transport2 : ∀ {α β γ} {X : Set α} {Y : Set β} (Z : X → Y → Set γ)
              {x x' : X} {y y' : Y}
@@ -44,6 +46,10 @@ transport3 : ∀ {α β γ δ} {X : Set α} {Y : Set β} {Z : Set γ}
              (p : x == x') (q : y == y') (r : z == z') → (F x y z) →
              (F x' y' z')
 transport3 F idp idp idp x = x
+
+{- Useful lemma for proving equalities using substitutions inside the equality -}
+substitute : ∀ {α} {X : Set α} (Y : X → X) {x y : X} (p : x == y) → (Y x == Y y)
+substitute Y idp = idp
 
 {- We construct a function from x == y to y == x by pattern matching.
    Note that we have written .x for the second argument. These is referred to
