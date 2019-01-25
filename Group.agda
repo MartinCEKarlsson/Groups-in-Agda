@@ -32,87 +32,85 @@ record is-group {ℓ} (X : Set ℓ) : Set ℓ where
     inv-l : ∀ a → ((i a) · a) == e
     set : is-hset X
 
-  private
-    e==e : e == e
-    e==e =
-      begin
-        e
-      ==⟨ idp ⟩
-        e
-      ∎
-
-  abstract
-    e==e·e : e == (e · e)
-    e==e·e =
-      begin
-        e
-      ==⟨ ! (unit-l e) ⟩
-        e · e
-      ∎
-
-    inv-r : ∀ a → (a · (i a)) == e
-    inv-r a =
-      begin
-      a · (i a)
-      ==⟨ ! (unit-l (a · (i a))) ⟩
-      e · (a · (i a))
-      ==⟨ ! (ass e a (i a) ) ⟩
-      (e · a) · (i a)
-      ==⟨ transport (λ y → ((e · a) · (i a)) == ((y · a) · (i a))) (! (inv-l (i a))) idp ⟩
-      (((i (i a)) · (i a) ) · a) · (i a)
-      ==⟨ transport (λ y → ( (((i (i a)) · (i a) ) · a) · (i a) ) == (y · (i a))) (ass (i (i a)) (i a) a) idp ⟩
-      ((i (i a)) · ((i a)  · a)) · (i a)
-      ==⟨ transport (λ y →  (((i (i a)) · ((i a)  · a)) · (i a)) == (((i (i a)) · y) · (i a))) (inv-l a) idp ⟩
-      ((i (i a)) · e) · (i a)
-      ==⟨  ass (i (i a)) e (i a) ⟩
-      (i (i a)) · ( e · (i a))
-      ==⟨ transport (λ y → ((i (i a)) · (e · (i a))) == ((i (i a)) · y ) ) (unit-l (i a)) idp ⟩
-      (i (i a)) · (i a)
-      ==⟨ inv-l (i a) ⟩
+  e==e : e == e
+  e==e =
+    begin
       e
-      ∎
+    ==⟨ idp ⟩
+      e
+    ∎
 
-    unit-r : ∀ a → (a · e) == a
-    unit-r a =
-      begin
-      a · e
-      ==⟨ transport (λ y → (a · e) == (a · y)) (! (inv-l a)) idp ⟩
-      a · ( (i a) · a)
-      ==⟨ ! (ass a (i a) a) ⟩
-      (a · (i a)) · a
-      ==⟨ transport (λ y → ((a · (i a)) · a) == (y · a)) (inv-r a) idp ⟩
-      e · a
-      ==⟨ unit-l a ⟩
-      a
-      ∎
+  e==e·e : e == (e · e)
+  e==e·e =
+    begin
+      e
+    ==⟨ ! (unit-l e) ⟩
+      e · e
+    ∎
 
-    solv : ∀ a b x → (x == ((i a) · b)) → ((a · x) == b)
-    solv a b x eq =
-      begin
-      (a · x)
-      ==⟨ substitute (λ y → a · y) eq ⟩
-      (a · ((i a) · b))
-      ==⟨ ! (ass a (i a) b) ⟩
-      ((a · (i a)) · b)
-      ==⟨ substitute (λ y → y · b) (inv-r a) ⟩
-      e · b
-      ==⟨ unit-l b ⟩
-      b
-      ∎
+  inv-r : ∀ a → (a · (i a)) == e
+  inv-r a =
+    begin
+    a · (i a)
+    ==⟨ ! (unit-l (a · (i a))) ⟩
+    e · (a · (i a))
+    ==⟨ ! (ass e a (i a) ) ⟩
+    (e · a) · (i a)
+    ==⟨ {!!} ⟩
+    (((i (i a)) · (i a) ) · a) · (i a)
+    ==⟨ transport (λ y → ( (((i (i a)) · (i a) ) · a) · (i a) ) == (y · (i a))) (ass (i (i a)) (i a) a) idp ⟩
+    ((i (i a)) · ((i a)  · a)) · (i a)
+    ==⟨ transport (λ y →  (((i (i a)) · ((i a)  · a)) · (i a)) == (((i (i a)) · y) · (i a))) (inv-l a) idp ⟩
+    ((i (i a)) · e) · (i a)
+    ==⟨  ass (i (i a)) e (i a) ⟩
+    (i (i a)) · ( e · (i a))
+    ==⟨ transport (λ y → ((i (i a)) · (e · (i a))) == ((i (i a)) · y ) ) (unit-l (i a)) idp ⟩
+    (i (i a)) · (i a)
+    ==⟨ inv-l (i a) ⟩
+    e
+    ∎
 
-    unique-solv : ∀ a b x → ((a · x) == b) → (x == ((i a) · b))
-    unique-solv a b x eq =
-      begin
-      x
-      ==⟨ ! (unit-l x) ⟩
-      e · x
-      ==⟨ substitute (λ y → y · x) (! (inv-l a)) ⟩
-      ((i a) · a) · x
-      ==⟨ ass (i a) a x ⟩
-      (i a) · (a · x)
-      ==⟨ substitute (λ y → (i a) · y) eq ⟩
-      (i a) · b
-      ∎
+  unit-r : ∀ a → (a · e) == a
+  unit-r a =
+    begin
+    a · e
+    ==⟨ transport (λ y → (a · e) == (a · y)) (! (inv-l a)) idp ⟩
+    a · ( (i a) · a)
+    ==⟨ ! (ass a (i a) a) ⟩
+    (a · (i a)) · a
+    ==⟨ transport (λ y → ((a · (i a)) · a) == (y · a)) (inv-r a) idp ⟩
+    e · a
+    ==⟨ unit-l a ⟩
+    a
+    ∎
+
+  solv : ∀ a b x → (x == ((i a) · b)) → ((a · x) == b)
+  solv a b x eq =
+    begin
+    (a · x)
+    ==⟨ substitute (λ y → a · y) eq ⟩
+    (a · ((i a) · b))
+    ==⟨ ! (ass a (i a) b) ⟩
+    ((a · (i a)) · b)
+    ==⟨ substitute (λ y → y · b) (inv-r a) ⟩
+    e · b
+    ==⟨ unit-l b ⟩
+    b
+    ∎
+
+  unique-solv : ∀ a b x → ((a · x) == b) → (x == ((i a) · b))
+  unique-solv a b x eq =
+    begin
+    x
+    ==⟨ ! (unit-l x) ⟩
+    e · x
+    ==⟨ substitute (λ y → y · x) (! (inv-l a)) ⟩
+    ((i a) · a) · x
+    ==⟨ ass (i a) a x ⟩
+    (i a) · (a · x)
+    ==⟨ substitute (λ y → (i a) · y) eq ⟩
+    (i a) · b
+    ∎
 
 
 
