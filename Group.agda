@@ -498,6 +498,27 @@ idtoiso-subgrp {i} {G} {.G} idp G' = G' -- We can actually just case split!
 trans-equiv-idtoiso : {i : ULevel} (G H : Group i) → transp-subgrp {i} {G} {H} == idtoiso-subgrp {i} {G} {H}
 trans-equiv-idtoiso {i} G H = funext transp-subgrp idtoiso-subgrp (λ {idp → idp})
 
+
+apd : {l k : ULevel} {X : Set l} {Y : X → Set k} {x x' : X} (f : (x : X) → Y x) (p : x == x') → (transport Y p (f x) ) == f x'
+apd f idp = idp
+
+--(transport Subgroup p (f G)) == f G
+
+map-lift : {l k : ULevel} {G : Group l} {H : Group k} (f : G →ᴳ H) → (Subgrp {l} {l} G → Subgrp {k} {k} H)
+map-lift f subg = record { prop = {!!} ; f = {!!} ; id = {!!} ; comp = {!!} }
+
+postulate
+  iso-implies-path : {l : ULevel}{G H : Group l} (iso : G ≃ᴳ H) → G == H
+
+module definable-normal-proof {ℓ : ULevel} (f : (G : Group ℓ) → (Subgrp {ℓ} {ℓ} G)) where
+
+  cool-lemma : {G : Group ℓ} (aut : G ≃ᴳ G) → ((map-lift (Σ.fst aut) (f G)) == f G)
+  cool-lemma aut =  {!!} ∙ apd f (iso-implies-path aut)
+
+  new-goal : {G : Group ℓ}(aut : G ≃ᴳ G) → map-lift (Σ.fst aut) == transport Subgrp (iso-implies-path aut)
+  new-goal aut = {!!}
+
+
 {- We are working towards the following claim: all definable subgroups are normal -}
 def-subgroups-are-normal : {ℓ : ULevel} (f : (G : Group ℓ) → (Subgrp {ℓ} {ℓ} G)) → (H : Group ℓ) → (is-normal (f H))
 def-subgroups-are-normal f H g h hprop = {!   !}
