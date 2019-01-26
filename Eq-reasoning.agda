@@ -1,4 +1,4 @@
-open import Equality
+open import lib.Base
 open import Agda.Primitive renaming (Level to ULevel)
 module Eq-reasoning where
 
@@ -23,7 +23,7 @@ module Eq-reasoning where
     → y == z
       -----
     → x == z
-  x ==⟨ x==y ⟩ y==z = transitive x==y y==z
+  x ==⟨ x==y ⟩ y==z = x==y ∙ y==z
 
   _∎ : ∀ {i} {A : Set i} (x : A)
       -----

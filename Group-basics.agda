@@ -1,92 +1,131 @@
 {-# OPTIONS --without-K --rewriting #-}
-open import Equality
-open import PropositionsAsTypes
-open import Agda.Primitive renaming (_⊔_ to lmax ; Level to ULevel ; lsuc to lsucc)
-open import Equivalences
 open import Eq-reasoning
-open import SetsAndProps
+open import Magma
+
+open import lib.Equivalence
+open import lib.Base
+open import lib.PathGroupoid
+open import lib.NType
+open import lib.types.Sigma
 
 {- This file draws heavily from the HOTT-library -}
 {- In this file we have the basic definitions of groups, subgroups, normal subgroups, and group homomorphisms + basic lemma's -}
 {- PLEASE ONLY PUSH THIS FILE IF IT LOADS WITHOUT OPEN GOALS, OTHERWISE THE OTHER FILES WILL NOT LOAD -}
 
 module Group-basics where
+{- A group G is an algebra hG; ·; −1; 1i with a binary, a unary, and
+   nullary operation in which the following identities are true:
+   G1: x · (y · z) ≈ (x · y) · z
+   G2: x · 1 ≈ 1 · x ≈ x
+   G3: x · x−1 ≈ x−1 · x ≈ 1
+-}
 
-{- Definition of the properties that a group has, and some useful lemma's -}
-record is-group {ℓ} (X : Set ℓ) : Set ℓ where
-  field
-    {-
-    A group G is an algebra hG; ·; −1; 1i with a binary, a unary, and
-    nullary operation in which the following identities are true:
-    G1: x · (y · z) ≈ (x · y) · z
-    G2: x · 1 ≈ 1 · x ≈ x
-    G3: x · x−1 ≈ x−1 · x ≈ 1
+{- Prove that we can weaken the axioms for a group (G; ∗) as
+   follows.
+   1. The binary operation is associative.
+   2. There exists a left identity e in G such that ex = x for all x 2 G.
+   3. For each a 2 G there exists a left inverse a0 2 G such that a0a = e
+-}
+module _ {α : ULevel} where
 
-    Prove that we can weaken the axioms for a group (G; ∗) as
-    follows.
-    1. The binary operation is associative.
-    2. There exists a left identity e in G such that ex = x for all x 2 G.
-    3. For each a 2 G there exists a left inverse a0 2 G such that a0a = e
-    -}
+  {- Definition of the properties that a group has. -}
+  is-associative : {X : Type α} (_⋆_ : X → X → X) → Type α
+  is-associative {X} _⋆_ = ((a b c : X) → ((a ⋆ b) ⋆ c) == (a ⋆ (b ⋆ c)))
 
-    e : X
-    _·_ : X → X → X
-    i : X → X
-    ass : ∀ a b c → ((a · b) · c) == (a · (b · c))
-    unit-l : ∀ a → (e · a) == a
-    inv-l : ∀ a → ((i a) · a) == e
-    set : is-hset X
+  is-unit-l : {X : Type α} (_⋆_ : X → X → X) → X → Type α
+  is-unit-l {X} _⋆_ e = ((a : X) → (e ⋆ a) == a)
 
-  abstract
+  is-inverse-l : {X : Type α} (_⋆_ : X → X → X) (e : X) (i : X → X) → Type α
+  is-inverse-l {X} _⋆_ e i = ((a : X) → ((i a) ⋆ a) == e)
 
-    {- A left inverse is also a right inverse -}
-    inv-r : ∀ a → (a · (i a)) == e
+  has-unit-l : {X : Type α} (_⋆_ : X → X → X) → Type α
+  has-unit-l {X} _⋆_ = Σ X (is-unit-l _⋆_)
+
+  has-inverse-l : {X : Type α} (_⋆_ : X → X → X) (e : X) → Type α
+  has-inverse-l {X} _⋆_ e = Σ (X → X) (is-inverse-l _⋆_ e)
+
+  is-group : Magma → Type α
+  is-group M =  is-associative (Magma._∗_ M) × is-set (Magma.X M)
+             × (Σ (has-unit-l (Magma._∗_ M))
+                  λ { (x , isUnit) → has-inverse-l (Magma._∗_ M) x})
+
+  record Group : Set (lsucc α) where
+    constructor group
+    field
+      M : Magma
+      is-groupl : is-group M
+
+
+    U : Type α
+    U = Magma.X M
+
+    e : U
+    e = (fst ∘ fst ∘ snd ∘ snd) is-groupl
+
+    comp : U → U → U
+    comp = Magma._∗_ M
+
+    _·_ = comp
+
+    i : U → U
+    i = (fst ∘ snd ∘ snd ∘ snd) is-groupl
+
+    ass : (a b c : U) → ((a · b) · c) == (a · (b · c))
+    ass = (fst is-groupl)
+
+    inv-l : (a : U) → ((i a) · a) == e
+    inv-l = (snd ∘ snd ∘ snd ∘ snd) is-groupl
+
+    unit-l : (a : U) → (e · a) == a
+    unit-l = (snd ∘ fst ∘ snd ∘ snd) is-groupl
+
+    set : is-set U
+    set = (fst ∘ snd) is-groupl
+
+    inv-r : (a : U) → (a · (i a)) == e
     inv-r a =
-      begin
-      a · (i a)
-      ==⟨ ! (unit-l (a · (i a))) ⟩
-      e · (a · (i a))
-      ==⟨ ! (ass e a (i a) ) ⟩
-      (e · a) · (i a)
-      ==⟨ transport (λ y → ((e · a) · (i a)) == ((y · a) · (i a))) (! (inv-l (i a))) idp ⟩
-      (((i (i a)) · (i a) ) · a) · (i a)
-      ==⟨ transport (λ y → ( (((i (i a)) · (i a) ) · a) · (i a) ) == (y · (i a))) (ass (i (i a)) (i a) a) idp ⟩
-      ((i (i a)) · ((i a)  · a)) · (i a)
-      ==⟨ transport (λ y →  (((i (i a)) · ((i a)  · a)) · (i a)) == (((i (i a)) · y) · (i a))) (inv-l a) idp ⟩
-      ((i (i a)) · e) · (i a)
-      ==⟨  ass (i (i a)) e (i a) ⟩
-      (i (i a)) · ( e · (i a))
-      ==⟨ transport (λ y → ((i (i a)) · (e · (i a))) == ((i (i a)) · y ) ) (unit-l (i a)) idp ⟩
-      (i (i a)) · (i a)
-      ==⟨ inv-l (i a) ⟩
-      e
-      ∎
+        a · (i a)
+      =⟨ ! (unit-l (a · (i a))) ⟩
+        e · (a · (i a))
+      =⟨ ! (ass e a (i a)) ⟩
+        (e · a) · (i a)
+      =⟨ ap (λ φ → (φ · a) · i a) (! (inv-l (i a))) ⟩
+        (((i (i a)) · (i a)) · a) · (i a)
+      =⟨ ap (λ φ → φ · (i a)) (ass (i (i a)) (i a) a) ⟩
+        ((i (i a)) · ((i a)  · a)) · (i a)
+      =⟨ ap (λ φ → ((i (i a)) · φ) · (i a)) (inv-l a) ⟩
+        ((i (i a)) · e) · (i a)
+      =⟨ ass (i (i a)) e (i a) ⟩
+        (i (i a)) · (e · (i a))
+      =⟨ ap (λ φ → (i (i a)) · φ) (unit-l (i a)) ⟩
+        (i (i a)) · (i a)
+      =⟨ inv-l (i a) ⟩
+        e
+      =∎
 
-    {- A left unit is also a right unit -}
-    unit-r : ∀ a → (a · e) == a
+    unit-r : (a : U) → (a · e) == a
     unit-r a =
-      begin
-      a · e
-      ==⟨ transport (λ y → (a · e) == (a · y)) (! (inv-l a)) idp ⟩
-      a · ( (i a) · a)
-      ==⟨ ! (ass a (i a) a) ⟩
-      (a · (i a)) · a
-      ==⟨ transport (λ y → ((a · (i a)) · a) == (y · a)) (inv-r a) idp ⟩
-      e · a
-      ==⟨ unit-l a ⟩
-      a
-      ∎
+        a · e
+      =⟨ ap (λ φ → (a · φ)) (! (inv-l a)) ⟩
+        a · ( (i a) · a)
+      =⟨ ! (ass a (i a) a) ⟩
+        (a · (i a)) · a
+      =⟨ ap (λ φ → (φ · a)) (inv-r a) ⟩
+        e · a
+      =⟨ unit-l a ⟩
+        a
+      =∎
 
-    {- Solving an equation -}
-    solv : ∀ a b x → (x == ((i a) · b)) → ((a · x) == b)
+      {- Solving an equation -}
+    solv : (a b x : U) → (x == ((i a) · b)) → ((a · x) == b)
     solv a b x eq =
       begin
       (a · x)
-      ==⟨ substitute (λ y → a · y) eq ⟩
+      ==⟨ ap (λ y → a · y) eq ⟩
       (a · ((i a) · b))
       ==⟨ ! (ass a (i a) b) ⟩
       ((a · (i a)) · b)
-      ==⟨ substitute (λ y → y · b) (inv-r a) ⟩
+      ==⟨ ap (λ y → y · b) (inv-r a) ⟩
       e · b
       ==⟨ unit-l b ⟩
       b
@@ -99,50 +138,40 @@ record is-group {ℓ} (X : Set ℓ) : Set ℓ where
       x
       ==⟨ ! (unit-l x) ⟩
       e · x
-      ==⟨ substitute (λ y → y · x) (! (inv-l a)) ⟩
+      ==⟨ ap (λ y → y · x) (! (inv-l a)) ⟩
       ((i a) · a) · x
       ==⟨ ass (i a) a x ⟩
       (i a) · (a · x)
-      ==⟨ substitute (λ y → (i a) · y) eq ⟩
+      ==⟨ ap (λ y → (i a) · y) eq ⟩
       (i a) · b
-      ∎
+        ∎
 
     {- Group computation is a congruence -}
     comp-is-congr : ∀ a b x y → (a == b) → (x == y) → ((a · x) == (b · y))
-    comp-is-congr a .a x .x idp idp = idp 
+    comp-is-congr a .a x .x idp idp = idp
 
+  module _ {β : ULevel} where
+    record Subgrp (G : Group) : Set (lmax α (lsucc β)) where
+      private
+        module G = Group G
+      field
+        prop : G.U → Set β
+        f : ∀ {a : G.U} → is-prop( prop a)
+        id : prop G.e
+        comp : ∀ {a b : G.U} → prop a → prop b → prop (G.comp a b)
 
-record Group ℓ : Set (lsucc ℓ) where
-  constructor group
-  field
-    U : Set ℓ
-    struct : is-group U
-  open is-group struct renaming (_·_ to comp) public
+      abstract
+        prop-equality : ∀ a b → (a == b) → prop a → prop b
+        prop-equality a .a idp aprop = aprop
 
-idf : ∀ {i} {X : Set i} → (X → X)
-idf X = X
+    {- Normal subgroups : -}
+    is-normal : {Grp : Group} → (Subgrp Grp) → Set (lmax α β)
+    is-normal {Grp} H = (g : U) → (h : U) → prop h → prop (g ×ᴳ (h ×ᴳ (iᴳ g)))
+      where
+        open Group Grp renaming (comp to _×ᴳ_; i to iᴳ)
+        open Subgrp H renaming (comp to _×ᴴ_)
 
-record Subgrp {i j} (G : Group i) : Set (lmax (lsucc j) i) where
-  private
-    module G = Group G
-  field
-    prop : G.U → Set j
-    f : ∀ {a : G.U} → is-hprop( prop a)
-    id : prop G.e
-    comp : ∀ {a b : G.U} → prop a → prop b → prop (G.comp a b)
-
-  abstract 
-    prop-equality : ∀ a b → (a == b) → prop a → prop b
-    prop-equality a .a idp aprop = aprop
-
-{- Normal subgroups : -}
-is-normal : {ℓ : ULevel} {Grp : Group ℓ} → (Subgrp {ℓ} {ℓ} Grp) → Set ℓ
-is-normal {ℓ} {Grp} H = (g : U) → (h : U) → prop h → prop (g ×ᴳ (h ×ᴳ (iᴳ g)))
-  where
-    open Group Grp renaming (comp to _×ᴳ_; i to iᴳ)
-    open Subgrp H renaming (comp to _×ᴴ_)
-
-record GroupHom {i j} (G : Group i) (H : Group j) : Set (lmax i j) where
+record GroupHom {α β : ULevel} (G : Group {α}) (H : Group {β}) : Set (lmax α β) where
   constructor group-hom
   private
     module G = Group G
@@ -215,22 +244,28 @@ record GroupHom {i j} (G : Group i) (H : Group j) : Set (lmax i j) where
 infix 0 _→ᴳ_
 _→ᴳ_ = GroupHom
 
-→ᴳ-id : ∀ {i} {G : Group i} → G →ᴳ G
+→ᴳ-id : {α : ULevel} {G : Group {α}} → G →ᴳ G
 →ᴳ-id = group-hom (λ x → x) (λ g₁ g₂ → idp)
 
-→ᴳ-trans : ∀ {i j k} {G : Group i} {H : Group j} {J : Group k} → G →ᴳ H → H →ᴳ J → G →ᴳ J
+→ᴳ-trans : {α β γ : ULevel}{G : Group {α}} {H : Group {β}} {J : Group {γ}} → G →ᴳ H → H →ᴳ J → G →ᴳ J
 →ᴳ-trans (group-hom g p) (group-hom h q) =
-  group-hom (λ z → h (g z)) (λ a b → transitive (ap h (p a b)) (q (g a) (g b)))
+  group-hom (λ z → h (g z)) (λ a b → (ap h (p a b)) ∙ (q (g a) (g b)))
 
-_≃ᴳ_ : ∀ {i j} (G : Group i) (H : Group j) → Set (lmax i j)
+_≃ᴳ_ : {α β : ULevel} (G : Group {α}) (H : Group {β}) → Set (lmax α β)
 G ≃ᴳ H = Σ (G →ᴳ H) (λ φ → is-equiv (GroupHom.f φ))
 infix 100 _≃ᴳ_
-module _≃ᴳ_ {i j} {G : Group i} {H : Group j} (iso : G ≃ᴳ H) where
-
+module _≃ᴳ_ {α β : ULevel} {G : Group {α}} {H : Group {β}} (iso : G ≃ᴳ H) where
   open Group H renaming (comp to _×ᴴ_)
   open Group G renaming (comp to _×ᴳ_)
   open GroupHom (Σ.fst iso)
-  open is-hae (is-equiv→is-hae f (Σ.snd iso))
+  open is-equiv (Σ.snd iso)
+
+  private
+    {- Action path over binary function. -}
+    ap2 : ∀ {i j k} {X : Set i} {Y : Set j} {Z : Set k} {x x' : X} {y y' : Y}
+        (p : x == x') (q : y == y') {rel : X → Y → Z}
+        → rel x y == rel x' y'
+    ap2 idp idp = idp
 
   preserves-comp : (a' b' : Group.U H) → g (Group.comp H a' b') == Group.comp G (g a') (g b')
   preserves-comp a' b' =
@@ -250,25 +285,14 @@ module _≃ᴳ_ {i j} {G : Group i} {H : Group j} (iso : G ≃ᴳ H) where
   f-hom : G →ᴳ H
   f-hom = Σ.fst iso
 
-  adj' : (a' : Group.U H) → ap g (f-g a') == g-f (g a')
-  adj' a' = is-group.set
-    (Group.struct G)
-    (g (f (g a')))
-    (g a')
-    (ap g (f-g a'))
-    (g-f (g a'))
-
   sym : (H ≃ᴳ G)
-  sym = g-hom , is-hae→is-equiv g (record { g = f
-                                          ; f-g = g-f
-                                          ; g-f = f-g
-                                          ; adj = adj' })
+  sym = g-hom , is-eq g f g-f f-g
 
-–>ᴳ : ∀ {i j} {G : Group i} {H : Group j} → (iso : G ≃ᴳ H) → (G →ᴳ H)
+–>ᴳ : {α β : ULevel} {G : Group {α}} {H : Group {β}} → (iso : G ≃ᴳ H) → (G →ᴳ H)
 –>ᴳ = _≃ᴳ_.f-hom
 
-<–ᴳ : ∀ {i j} {G : Group i} {H : Group j} → (G ≃ᴳ H) → (H →ᴳ G)
+<–ᴳ : {α β : ULevel} {G : Group {α}} {H : Group {β}} → (G ≃ᴳ H) → (H →ᴳ G)
 <–ᴳ = _≃ᴳ_.g-hom
 
-sym : ∀ {i j} (G : Group i) (H : Group j) → (G ≃ᴳ H) → (H ≃ᴳ G)
+sym : {α β : ULevel} (G : Group {α}) (H : Group {β}) → (G ≃ᴳ H) → (H ≃ᴳ G)
 sym G H = _≃ᴳ_.sym

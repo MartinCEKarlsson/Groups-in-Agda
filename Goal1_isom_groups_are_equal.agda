@@ -1,180 +1,92 @@
 {-# OPTIONS --without-K --rewriting #-}
-open import Equality
-open import PropositionsAsTypes
-open import Agda.Primitive renaming (_⊔_ to lmax ; Level to ULevel ; lsuc to lsucc)
-open import Equivalences
-open import Eq-reasoning
-open import SetsAndProps
+open import lib.Base
+open import lib.Equivalence
+open import lib.NType
+open import lib.NType2
+open import lib.Funext
+open import lib.PathOver
+open import lib.types.Sigma
+open import lib.types.Pi
+open import lib.PathGroupoid
+
 open import Group-basics
+open import Magma
 
 module Goal1_isom_groups_are_equal where
 
 {- In this file we work towards the first goal of the project: isomorphic groups are equal in HoTT -}
 
-{- We want some sort of convenient equivalence for is-group records. -}
-module is-group-encode-decode {α : ULevel} {X : Set α} where
-  module is-group-eq-transports {G H : is-group X} (e-eq : is-group.e G == is-group.e H)
-    (comp-eq : is-group._·_ G == is-group._·_ H) (i-eq : is-group.i G == is-group.i H) where
-    private
-      module G = is-group G
-      module H = is-group H
-      open is-group H using (_·_)
-
-    ass-tp : ((x₁ x₂ x₃ : X) → ((x₁ G.· x₂) G.· x₃) == (x₁ G.· (x₂ G.· x₃)))
-           → (x₁ x₂ x₃ : X) → ((x₁ · x₂) · x₃) == (x₁ · (x₂ · x₃))
-    ass-tp = transport (λ x → (x₁ x₂ x₃ : X) → x (x x₁ x₂) x₃ == x x₁ (x x₂ x₃)) comp-eq
-
-    unit-l-tp : ((x₂ : X) → (G.e G.· x₂) == x₂) → (x₂ : X) → (H.e · x₂) == x₂
-    unit-l-tp = transport2 (λ x x₁ → (x₂ : X) → x₁ x x₂ == x₂) e-eq comp-eq
-
-    inv-l-tp : ((x : X) → (G.i x G.· x) == G.e) → (x : X) → (H.i x · x) == H.e
-    inv-l-tp = transport3 (λ z z₁ z₂ → (x : X) → z₂ (z x) x == z₁) i-eq e-eq
-      comp-eq
-
-    all-paths : ∀ {x y : X} → (p q : x == y) → (p == q)
-    all-paths {x} {y} = λ p q → H.set x y p q
-
-      {- We need to specify the following types: -}
-    set-path : G.set == H.set
-    set-path = is-hset-is-hprop G.set H.set
-
-    ass-path : ass-tp G.ass == H.ass
-    ass-path = hprop-dep-prod3 (λ x y z → all-paths)
-                             (ass-tp G.ass)
-                             H.ass
-
-    unit-l-path : unit-l-tp G.unit-l == H.unit-l
-    unit-l-path = hprop-dep-prod (λ x → all-paths)
-                                (unit-l-tp G.unit-l)
-                                H.unit-l
-
-    inv-l-path : inv-l-tp G.inv-l == H.inv-l
-    inv-l-path = hprop-dep-prod (λ x → all-paths) (inv-l-tp G.inv-l) H.inv-l
-
-
-  record is-group-eq  (G H : is-group X) : Set α where
-    constructor is-group-eq-in
-    private
-      module G = is-group G
-      module H = is-group H
-      open is-group H using (_·_)
-
-    field
-      e-eq : G.e == H.e
-      comp-eq :  G._·_ == H._·_
-      i-eq :  G.i == H.i
-
-    open is-group-eq-transports {G} {H} e-eq comp-eq i-eq
-
-    {- The following paths can probably be deduced from the above and the fact
-       we are dealing with hsets. -}
-    field
-      set-eq : G.set == H.set
-      ass-eq : ass-tp G.ass == H.ass
-      unit-l-eq : unit-l-tp G.unit-l == H.unit-l
-      inv-l-eq : inv-l-tp G.inv-l == H.inv-l
-
-  {- This is a more convenient way to create an equivalence. You only need
-     three paths instead of seven... -}
-  is-group-eqv : {G H : is-group X} → (e-eq : is-group.e G == is-group.e H) →
-                   (comp-eq :  is-group._·_ G == is-group._·_ H) →
-                   (i-eq : is-group.i G == is-group.i H) →
-                   (is-group-eq G H)
-  is-group-eqv {G} {H} idp idp idp = lemma
+isotoid : {α : ULevel} {G H : Group {α}} (iso : G ≃ᴳ H) → G == H
+isotoid {α} {G} {H} = {!   !}
+  where
+  {- We want the proofs that a Magma is a group to be propositions. -}
+  is-group-is-prop : {G : Magma} → is-prop (is-group G)
+  is-group-is-prop {M} = all-paths-is-prop lemma
     where
-      module G = is-group G
-      module H = is-group H
-      open is-group-eq-transports {G} {H} idp idp idp
+      open Magma.Magma M
+      lemma : (x y : is-group M) → (x == y)
+      lemma (isAssoc , isSet , (e , isUnit) , inv , isInv)
+            (isAssoc' , isSet' , (e' , isUnit') , inv' , isInv')
+            =   pair×= isAssoc= (pair×= isSet= (pair= unit= ↓-inv=))
+        where
+          module G = Group (group M (isAssoc , isSet , (e , isUnit) , inv , isInv))
+          module H = Group (group M (isAssoc' , isSet' , (e' , isUnit') , inv' , isInv'))
 
-      lemma : is-group-eq G H
-      lemma = is-group-eq-in idp idp idp set-path ass-path unit-l-path inv-l-path
+          paths-are-props : {a b : X} → is-prop (a == b)
+          paths-are-props {a} {b} = has-level-apply isSet a b
 
-  encode : (G H : is-group X) → (G == H) → is-group-eq G H
-  encode G .G idp = is-group-eq-in idp idp idp idp idp idp idp
+          isSet= : isSet == isSet'
+          isSet= = prop-has-all-paths isSet isSet'
 
-  {- Here we need to somehow use the 3 idps and the deduced paths.. -}
-  decode : (G H : is-group X) → (is-group-eq G H) → G == H
-  decode record { e = .(is-group.e H) ; _·_ = .(is-group._·_ H)
-                ; i = .(is-group.i H) ; ass = .(is-group.ass H)
-                ; unit-l = .(is-group.unit-l H) ; inv-l = .(is-group.inv-l H)
-                ; set = .(is-group.set H) }
-                H (is-group-eq-in idp idp idp idp idp idp idp) = idp
+          isAssoc= : isAssoc == isAssoc'
+          isAssoc= = ap (curry ∘ curry) (λ= λ {((a , b) , c) →
+            prop-path paths-are-props (isAssoc a b c) (isAssoc' a b c)})
 
-  f-g : (G H : is-group X) → (eqv : is-group-eq G H) → encode G H (decode G H eqv) == eqv
-  f-g record { e = .(is-group.e H) ; _·_ = .(is-group._·_ H)
-             ; i = .(is-group.i H) ; ass = .(is-group.ass H)
-             ; unit-l = .(is-group.unit-l H) ; inv-l = .(is-group.inv-l H)
-             ; set = .(is-group.set H) }
-             H (is-group-eq-in idp idp idp idp idp idp idp) = idp
+          H= : _∗_ == H.comp
+          H= = idp
 
-  g-f : (G H : is-group X) → (p : G == H) → (decode G H (encode G H p) == p)
-  g-f G .G idp = idp
+          e= : e == e'
+          e= =
+              e
+            =⟨ ! (H.unit-r e) ⟩
+              e ∗ e'
+            =⟨ G.unit-l e' ⟩
+              e'
+            =∎
 
-  is-group-eq-qinv : (G H : is-group X) → (qinv (encode G H))
-  is-group-eq-qinv G H = record {g = decode G H ; f-g = f-g G H ; g-f = g-f G H}
+          isUnit= : isUnit == isUnit' [ (λ x → is-unit-l _∗_ x) ↓ e= ]
+          isUnit= = from-transp ((λ x → is-unit-l _∗_ x)) e= {isUnit} (λ= (λ x →
+            prop-path paths-are-props ((transport ((λ x → is-unit-l _∗_ x)) e= isUnit) x) (isUnit' x)))
 
-{- We need univalence to show that the two underlying universes are equal. -}
-postulate
-  ua : ∀ {i} {A B : Set i} → (A ≃ B) → (A == B)
+          unit= : (e , isUnit) == (e' , isUnit')
+          unit= = pair= e= isUnit=
 
-{- Here we define the idtoiso type. -}
-module _ {i} {G H : Group i} (iso : G ≃ᴳ H) where
-  private
-    module G = Group G
-    module H = Group H
-    open GroupHom (Σ.fst iso)
-    module Genc = is-group-encode-decode
-    open Σ-encode-decode
+          inv= : inv == inv'
+          inv= = λ= (λ x →
+              inv x
+            =⟨ ! (H.unit-r (inv x)) ⟩
+              (inv x) ∗ e'
+            =⟨ ap (λ φ → (inv x) ∗ φ) (! (H.inv-r x)) ⟩
+              (inv x) ∗ (x ∗ (inv' x))
+            =⟨ ! (G.ass (inv x) x (inv' x)) ⟩
+              ((inv x) ∗ x) ∗ (inv' x)
+            =⟨ ap (λ φ → (φ ∗ inv' x)) (G.inv-l x) ⟩
+              e ∗ inv' x
+            =⟨ G.unit-l (inv' x) ⟩
+              inv' x
+            =∎)
 
-    {- It will be more convenient to handle Σ types instead of Groups. -}
-    Σ-Group : Set (lsucc i)
-    Σ-Group = Σ (Set i) λ x → is-group x
+          isInv= : transport (λ x → is-inverse-l _∗_ x inv')
+                             (e=)
+                             (transport (λ x → is-inverse-l _∗_ e x)
+                                        (inv=)
+                                        isInv)
+                   == isInv'
+          isInv= = λ= {α} (λ x → prop-path paths-are-props (transport
+            (λ x → is-inverse-l _∗_ x inv') (e=) (transport
+              (λ x → is-inverse-l _∗_ e x) (inv=) isInv) x) (isInv' x))
 
-    Group→Σ : (G : Group i) → Σ-Group
-    Group→Σ (group U struct) = U , struct
-
-    Σ→Group : (Gs : Σ-Group) → Group i
-    Σ→Group (U , proof) = group U proof
-
-    {- They are the same thing anyway. -}
-    Group→Σ→Group==id : {G : Group i} → Σ→Group (Group→Σ G) == G
-    Group→Σ→Group==id = idp
-
-    {- If we can create a Σ-eq from the isomorphism we are basically done. -}
-    iso→Σ-eq : Σ-eq (Group→Σ G) (Group→Σ H)
-    iso→Σ-eq = Σ-eq-in U-path (Genc.decode G→H-tp H.struct
-                                (Genc.is-group-eqv e-path comp-path i-path))
-      where
-        open _≃ᴳ_ iso
-        open is-group
-
-        U-path : G.U == H.U
-        U-path = ua (f , (Σ.snd iso))
-
-        G→H-tp : is-group H.U
-        G→H-tp = transport is-group U-path G.struct
-
-        e-path : e G→H-tp == H.e
-        e-path = {!   !}
-
-        comp-path : _·_ G→H-tp == H.comp
-        comp-path = {!   !}
-
-        i-path : is-group.i G→H-tp == H.i
-        i-path = {!   !}
-
-    {- From the Σ-eq we get the required identity. -}
-    iso→Σid : Σ→Group (Group→Σ G) == Σ→Group (Group→Σ H)
-    iso→Σid = ap Σ→Group (decode (Group→Σ G) (Group→Σ H) iso→Σ-eq)
-
-  isotoid : G == H
-  isotoid =
-    begin
-      G
-    ==⟨ ! Group→Σ→Group==id ⟩
-      Σ→Group (Group→Σ G)
-    ==⟨ iso→Σid ⟩
-      Σ→Group (Group→Σ H)
-    ==⟨ Group→Σ→Group==id ⟩
-      H
-    ∎
+          ↓-inv= : (inv , isInv) == (inv' , isInv') [ (λ { (x , isU) → has-inverse-l _∗_ x}) ↓ unit= ]
+          ↓-inv= = {!   !} -- from-transp (λ x → has-inverse-l _∗_ (fst x)) unit=
+                   -- {{! !}}
+                   -- (pair= inv= (from-transp (λ x → is-inverse-l _∗_ e' x) inv= isInv=))
