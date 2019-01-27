@@ -11,7 +11,7 @@ open import lib.PathGroupoid
 open import lib.Univalence
 
 open import Group-basics
-open import Magma
+open import Magma-basics
 
 module Goal1_isom_groups_are_equal where
 
@@ -20,7 +20,7 @@ module Goal1_isom_groups_are_equal where
 -}
 
 module _ {α : ULevel} {M : Magma {α}} where
-  open Magma.Magma M
+  open Magma M
   {- We want the proofs that a Magma is a group to be propositions. -}
 
   is-group-all-paths : (x y : is-group M) → (x == y)

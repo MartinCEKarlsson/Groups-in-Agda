@@ -1,6 +1,6 @@
 {-# OPTIONS --without-K --rewriting #-}
 open import Eq-reasoning
-open import Magma
+open import Magma-basics
 
 open import lib.Equivalence
 open import lib.Base
