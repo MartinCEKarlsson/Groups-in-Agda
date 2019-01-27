@@ -2,6 +2,7 @@
 open import lib.Base
 open import lib.Equivalence
 open import lib.Funext
+open import lib.NType
 
 open import Eq-reasoning
 open import Group-basics
@@ -47,19 +48,43 @@ trans-equiv-idtoiso G H = λ= (λ {idp → idp})
 
 -- (transport Subgroup p (f G)) == f G
 
-map-lift : {α β γ δ : ULevel} {G : Group} {H : Group} (f : G →ᴳ H) → (Subgrp {α} {γ} G → Subgrp {β} {δ} H)
-map-lift f subg = record { prop = {! !} ; f = {! !} ; id = {! !} ; comp = {! !} }
+! : {α : ULevel} {X : Type α} {x y : X} (p : x == y) → y == x
+! idp = idp
+
+apd2 : {l k : ULevel} {X : Set l} {Y : X → Set k} {x x' : X} (f : (x : X) → Y x) (p : x == x') → (transport Y p (f x) ) == f x'
+apd2 f idp = idp
+
+map-lift : {α γ : ULevel} {G : Group} {H : Group} (hom : H →ᴳ G) → (Subgrp {α} {γ} G → Subgrp {α} {γ} H)
+map-lift {α} {γ} {G} {H} hom sub-g = record { prop = prop-lemma  ; f = λ {a} → f-lemma a ; id =  id-lemma ; comp =  λ {a} {b} → comp-lemma a b}
+  where
+    open Subgrp sub-g
+    open GroupHom hom renaming (f to h-to-g)
+
+    prop-lemma : Group.U H → Set γ
+    prop-lemma h = prop (h-to-g h)
+
+    f-lemma :  (a : Group.U H) → is-prop (prop-lemma a)
+    f-lemma a = f
+
+    id-lemma : prop-lemma (Group.e H)
+    id-lemma = coe (ap prop (! id-to-id)) id
+
+    comp-lemma : (a b : Group.U H) → prop-lemma a → prop-lemma b → prop-lemma (Group.comp H a b)
+    comp-lemma a b prop-a prop-b = coe (ap prop (! (pres-comp a b))) (comp prop-a prop-b)
+
+
 
 postulate
   iso-implies-path : {α : ULevel} {G H : Group {α}} (iso : G ≃ᴳ H) → G == H
 
+
 module definable-normal-proof  {α β : ULevel} (f : (G : Group) → (Subgrp {α} {β} G)) where
 
-  cool-lemma : {G : Group} (aut : G ≃ᴳ G) → ((map-lift (fst aut) (f G)) == f G)
-  cool-lemma aut =  {! !} ∙ {!   !} -- apd f (iso-implies-path aut)
+  cool-lemma : {G : Group} (aut : G ≃ᴳ G) → ((map-lift (Σ.fst aut) (f G)) == f G)
+  cool-lemma aut =  {! !} ∙ (apd2 f (iso-implies-path aut)) -- apd f (iso-implies-path aut)
 
-  new-goal : {G : Group}(aut : G ≃ᴳ G) → map-lift (Σ.fst aut) == transport Subgrp (iso-implies-path aut)
-  new-goal aut = {! !}
+  --new-goal : {G : Group}(aut : G ≃ᴳ G) → map-lift aut == transport Subgrp (iso-implies-path aut)
+  --new-goal aut = {! !}
 
 
 {- We are working towards the following claim: all definable subgroups are normal -}
