@@ -47,7 +47,7 @@ module _ {α : ULevel} where
   is-group : Magma → Type α
   is-group M =  is-associative (Magma._∗_ M) × is-set (Magma.X M)
              × (Σ (has-unit-l (Magma._∗_ M))
-                  λ { (x , isUnit) → has-inverse-l (Magma._∗_ M) x})
+                  λ { (e , isUnit) → has-inverse-l (Magma._∗_ M) e})
 
   record Group : Set (lsucc α) where
     constructor group
@@ -159,6 +159,7 @@ module _ {α : ULevel} where
         f : ∀ {a : G.U} → is-prop( prop a)
         id : prop G.e
         comp : ∀ {a b : G.U} → prop a → prop b → prop (G.comp a b)
+        inv : ∀ {a : G.U} → prop a → prop (G.i a)
 
       abstract
         prop-equality : ∀ a b → (a == b) → prop a → prop b
