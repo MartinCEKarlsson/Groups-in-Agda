@@ -161,16 +161,15 @@ module _ {α : ULevel} where
         comp : ∀ {a b : G.U} → prop a → prop b → prop (G.comp a b)
         inv : ∀ {a : G.U} → prop a → prop (G.i a)
 
-      abstract
-        prop-equality : ∀ a b → (a == b) → prop a → prop b
-        prop-equality a .a idp aprop = aprop
+      prop-equality : ∀ a b → (a == b) → prop a → prop b
+      prop-equality a .a idp aprop = aprop
 
     {- Normal subgroups : -}
     is-normal : {Grp : Group} → (Subgrp Grp) → Set (lmax α β)
-    is-normal {Grp} H = (g : U) → (h : U) → prop h → prop (g ×ᴳ (h ×ᴳ (iᴳ g)))
+    is-normal {Grp} H = (g : U) → (h : U) → prop h → prop (g ·ᴳ (h ·ᴳ (iᴳ g)))
       where
-        open Group Grp renaming (comp to _×ᴳ_; i to iᴳ)
-        open Subgrp H renaming (comp to _×ᴴ_)
+        open Group Grp renaming (comp to _·ᴳ_; i to iᴳ)
+        open Subgrp H renaming (comp to _·ᴴ_)
 
 record GroupHom {α β : ULevel} (G : Group {α}) (H : Group {β}) : Set (lmax α β) where
   constructor group-hom
@@ -214,7 +213,7 @@ record GroupHom {α β : ULevel} (G : Group {α}) (H : Group {β}) : Set (lmax �
           ∎
 
   abstract
-    {- We prove the following lemma: every homomorphism maps the identity to the identity -}
+    {- Lemma: every homomorphism maps the identity to the identity -}
     id-to-id : (f G.e == H.e)
     id-to-id =
         begin
@@ -248,7 +247,7 @@ _→ᴳ_ = GroupHom
 →ᴳ-id : {α : ULevel} {G : Group {α}} → G →ᴳ G
 →ᴳ-id = group-hom (λ x → x) (λ g₁ g₂ → idp)
 
-→ᴳ-trans : {α β γ : ULevel}{G : Group {α}} {H : Group {β}} {J : Group {γ}} → G →ᴳ H → H →ᴳ J → G →ᴳ J
+→ᴳ-trans : {α β γ : ULevel}{G : Group {α}} {H : Group {β}} {J : Group {γ}} → (G →ᴳ H) → (H →ᴳ J) → (G →ᴳ J)
 →ᴳ-trans (group-hom g p) (group-hom h q) =
   group-hom (λ z → h (g z)) (λ a b → (ap h (p a b)) ∙ (q (g a) (g b)))
 
@@ -256,8 +255,8 @@ _≃ᴳ_ : {α β : ULevel} (G : Group {α}) (H : Group {β}) → Set (lmax α �
 G ≃ᴳ H = Σ (G →ᴳ H) (λ φ → is-equiv (GroupHom.f φ))
 infix 100 _≃ᴳ_
 module _≃ᴳ_ {α β : ULevel} {G : Group {α}} {H : Group {β}} (iso : G ≃ᴳ H) where
-  open Group H renaming (comp to _×ᴴ_)
-  open Group G renaming (comp to _×ᴳ_)
+  open Group H renaming (comp to _·ᴴ_)
+  open Group G renaming (comp to _·ᴳ_)
   open GroupHom (Σ.fst iso)
   open is-equiv (Σ.snd iso)
 
@@ -268,16 +267,16 @@ module _≃ᴳ_ {α β : ULevel} {G : Group {α}} {H : Group {β}} (iso : G ≃�
         → rel x y == rel x' y'
     ap2 idp idp = idp
 
-  preserves-comp : (a' b' : Group.U H) → g (Group.comp H a' b') == Group.comp G (g a') (g b')
+  preserves-comp : (a' b' : Group.U H) → g (a' ·ᴴ b') == (g a' ·ᴳ g b')
   preserves-comp a' b' =
     begin
-      g (a' ×ᴴ b')
-    ==⟨ ap g (ap2 (! (f-g a')) (! (f-g b')) {_×ᴴ_}) ⟩
-      g ((f (g a')) ×ᴴ (f (g b')))
+      g (a' ·ᴴ b')
+    ==⟨ ap g (ap2 (! (f-g a')) (! (f-g b')) {_·ᴴ_}) ⟩
+      g ((f (g a')) ·ᴴ (f (g b')))
     ==⟨ ap g (! (pres-comp (g a') (g b'))) ⟩
-      g (f ((g a') ×ᴳ (g b')))
-    ==⟨ g-f (((g a') ×ᴳ (g b'))) ⟩
-      (g a') ×ᴳ (g b')
+      g (f ((g a') ·ᴳ (g b')))
+    ==⟨ g-f (((g a') ·ᴳ (g b'))) ⟩
+      (g a') ·ᴳ (g b')
     ∎
 
   g-hom : H →ᴳ G
