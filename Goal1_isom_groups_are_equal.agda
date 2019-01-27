@@ -150,38 +150,32 @@ module _ {α : ULevel} where
     group'= : (G H : Group') → Type α
     group'= G H = magma= (fst G) (fst H)
 
-    iso≃group' : (G H : Group) → (G ≃ᴳ H) ≃ (group'= Σ⟪ G ⟫ Σ⟪ H ⟫)
-    iso≃group' G H = equiv f g f-g g-f
+    iso≃group'= : (G H : Group) → (G ≃ᴳ H) ≃ (group'= Σ⟪ G ⟫ Σ⟪ H ⟫)
+    iso≃group'= G H = equiv f g f-g g-f
       where
 
         X≃ : G ≃ᴳ H → (Magma.X (fst Σ⟪ G ⟫) ≃ Magma.X (fst Σ⟪ H ⟫))
-        X≃ iso =
-            Magma.X (fst Σ⟪ G ⟫)
-          ≃⟨ coe-equiv idp ⟩
-            Group.U G
-          ≃⟨ GroupHom.f (fst iso) , snd iso ⟩
-            Group.U H
-          ≃⟨ coe-equiv idp ⟩
-            Magma.X (fst Σ⟪ H ⟫)
-          ≃∎
+        X≃ iso = GroupHom.f (fst iso) , snd iso
 
         f : G ≃ᴳ H → group'= Σ⟪ G ⟫ Σ⟪ H ⟫
         f x = record { carrier-equiv = X≃ x
-                     ; preserves-operator = {!   !} }
+                     ; preserves-operator = GroupHom.pres-comp (fst x) }
 
         g : group'= Σ⟪ G ⟫ Σ⟪ H ⟫ → G ≃ᴳ H
-        g = {!   !}
+        g record { carrier-equiv = carrier-equiv
+                 ; preserves-operator = preserves-operator }
+               = (group-hom (–> carrier-equiv) preserves-operator) , snd carrier-equiv
 
         f-g : (x : group'= Σ⟪ G ⟫ Σ⟪ H ⟫) → f (g x) == x
-        f-g = {!   !}
+        f-g x = idp
 
         g-f : (x : G ≃ᴳ H) → g (f x) == x
-        g-f = {!   !}
+        g-f x = idp
 
   iso≃id : {G H : Group {α}} → (G ≃ᴳ H) ≃ (G == H)
   iso≃id {G} {H} =
       G ≃ᴳ H
-    ≃⟨ iso≃group' G H ⟩
+    ≃⟨ iso≃group'= G H ⟩
       group'= Σ⟪ G ⟫ Σ⟪ H ⟫
     ≃⟨ magma=-equiv (Group.M G) (Group.M H) ⟩
       Group.M G == Group.M H
