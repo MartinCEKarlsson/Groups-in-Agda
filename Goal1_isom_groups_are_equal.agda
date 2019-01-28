@@ -15,9 +15,19 @@ open import Magma-basics
 
 module Goal1_isom_groups_are_equal where
 
-{- In this file we work towards the first goal of the project: isomorphic
-   groups are equal in HoTT
+{- In this file we work towards the first goal of the project: isomorphisms
+   between groups are equivalent to identities between groups in HoTT.
+
+   The plan is to show that isomorphisms between groups are equivalent to some
+   simpler notion of equivalence between a sigma type which is equiavelent to
+   our notion of groups.
+
+   As it stands it seems sufficient to show that the underlying magma of two
+   groups is equal, then the other properties follow, i.e., is-group is a
+   proposition. So for two groups to be equaivalent it is enough to have the
+   underlying magma to be equivalent.
 -}
+
 
 module _ {α : ULevel} {M : Magma {α}} where
   open Magma M
@@ -79,7 +89,7 @@ module _ {α : ULevel} {M : Magma {α}} where
 
       ↓-inv= : (inv , isInv) == (inv' , isInv')
                             [ (λ { (x , isU) → has-inverse-l _∗_ x}) ↓ unit= ]
-      ↓-inv= = from-transp (λ x → has-inverse-l _∗_ (fst x)) unit= inv,isInv=
+      ↓-inv= = from-transp (λ x → has-inverse-l _∗_ (fst x)) unit= (inv,isInv= {unit=})
         where
           tpinv : (p : e , isUnit == e' , isUnit') → has-inverse-l _∗_ e'
           tpinv p = transport (λ x → has-inverse-l _∗_ (fst x)) p (inv , isInv)
@@ -112,14 +122,6 @@ module _ {α : ULevel} {M : Magma {α}} where
   is-group-is-prop : is-prop (is-group M)
   is-group-is-prop = all-paths-is-prop is-group-all-paths
 
-
-  {- We now use another way of finding a map from Subgrp G to Subgrp H using the identity -}
-  {- firstly, we define the map idtoiso which takes an equality to an isomorphism in the trivial way -}
-  -- idtoiso : {α : ULevel} {G H : Group {α}} → (G == H) → (G ≃ᴳ H)
-  -- idtoiso {α} {G} {.G} idp = →ᴳ-id , is-eq (λ z → z) (λ z → z) (λ a → idp) (λ a → idp)
-  --
-  -- isotoid : {α : ULevel} {G H : Group {α}} (iso : G ≃ᴳ H) → (G == H)
-  -- isotoid {α} {G} {H} iso = {!   !}
 module _ {α : ULevel} where
   private
 
@@ -147,9 +149,11 @@ module _ {α : ULevel} where
         g-f : (G : Group) → (g (f G) == G)
         g-f M = idp
 
+    {- We define a notion of group' equivalence. -}
     group'= : (G H : Group') → Type α
     group'= G H = magma= (fst G) (fst H)
 
+    {- This notion should be equivalent to isomorphism. -}
     iso≃group'= : (G H : Group) → (G ≃ᴳ H) ≃ (group'= Σ⟪ G ⟫ Σ⟪ H ⟫)
     iso≃group'= G H = equiv f g f-g g-f
       where
@@ -172,6 +176,30 @@ module _ {α : ULevel} where
         g-f : (x : G ≃ᴳ H) → g (f x) == x
         g-f x = idp
 
+
+  magma-id≃group'-id : {G H : Group {α}} → (Group.M G == Group.M H) ≃ (Σ⟪ G ⟫ == Σ⟪ H ⟫)
+  magma-id≃group'-id {G} {H} = equiv f g f-g g-f
+    where
+      f : {G H : Group {α}} → (Group.M G == Group.M H) → (Σ⟪ G ⟫ == Σ⟪ H ⟫)
+      f x = pair= x (from-transp (λ m → is-group m) x (prop-path is-group-is-prop _ _))
+
+      g : {G H : Group {α}} → (Σ⟪ G ⟫ == Σ⟪ H ⟫) → (Group.M G == Group.M H)
+      g = fst=
+
+      f-g : {G H : Group {α}} → (b : Σ⟪ G ⟫ == Σ⟪ H ⟫) → f (g b) == b
+      f-g {group M is-groupl} {group .M .is-groupl} idp =
+          f (g {group M is-groupl} idp)
+        =⟨ pair== idp (prop-path (has-level-apply (prop-is-set is-group-is-prop) _ _) _ _) ⟩
+          idp
+        =∎
+
+
+      g-f : {G H : Group {α}} → (a : Group.M G == Group.M H) → g {G} {H} (f a) == a
+      g-f {group M x} {group .M y} idp = fst=-β idp (from-transp is-group idp
+        (prop-path (has-level-in (has-level-apply is-group-is-prop)) x y))
+
+  {- Now we want to show that isomorphisms are equivalent to equalities between
+     groups. -}
   iso≃id : {G H : Group {α}} → (G ≃ᴳ H) ≃ (G == H)
   iso≃id {G} {H} =
       G ≃ᴳ H
@@ -179,8 +207,14 @@ module _ {α : ULevel} where
       group'= Σ⟪ G ⟫ Σ⟪ H ⟫
     ≃⟨ magma=-equiv (Group.M G) (Group.M H) ⟩
       Group.M G == Group.M H
-    ≃⟨ {!   !} ⟩ -- this should follow from the fact that is-group-is-prop
+    ≃⟨ magma-id≃group'-id ⟩
       Σ⟪ G ⟫ == Σ⟪ H ⟫
     ≃⟨ ap-equiv (Group≃Group' ⁻¹) Σ⟪ G ⟫ Σ⟪ H ⟫ ⟩
       G == H
     ≃∎
+
+  idtoiso : {G H : Group {α}} → (G == H) → (G ≃ᴳ H)
+  idtoiso = <– iso≃id
+
+  isotoid : {G H : Group {α}} (iso : G ≃ᴳ H) → (G == H)
+  isotoid = –> iso≃id

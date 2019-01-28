@@ -1,5 +1,4 @@
 {-# OPTIONS --without-K --rewriting #-}
-open import Eq-reasoning
 open import Magma-basics
 
 open import lib.Equivalence
@@ -119,32 +118,30 @@ module _ {α : ULevel} where
       {- Solving an equation -}
     solv : (a b x : U) → (x == ((i a) · b)) → ((a · x) == b)
     solv a b x eq =
-      begin
       (a · x)
-      ==⟨ ap (λ y → a · y) eq ⟩
+      =⟨ ap (λ y → a · y) eq ⟩
       (a · ((i a) · b))
-      ==⟨ ! (ass a (i a) b) ⟩
+      =⟨ ! (ass a (i a) b) ⟩
       ((a · (i a)) · b)
-      ==⟨ ap (λ y → y · b) (inv-r a) ⟩
+      =⟨ ap (λ y → y · b) (inv-r a) ⟩
       e · b
-      ==⟨ unit-l b ⟩
+      =⟨ unit-l b ⟩
       b
-      ∎
+      =∎
 
     {- Solving an equation part 2 -}
     unique-solv : ∀ a b x → ((a · x) == b) → (x == ((i a) · b))
     unique-solv a b x eq =
-      begin
       x
-      ==⟨ ! (unit-l x) ⟩
+      =⟨ ! (unit-l x) ⟩
       e · x
-      ==⟨ ap (λ y → y · x) (! (inv-l a)) ⟩
+      =⟨ ap (λ y → y · x) (! (inv-l a)) ⟩
       ((i a) · a) · x
-      ==⟨ ass (i a) a x ⟩
+      =⟨ ass (i a) a x ⟩
       (i a) · (a · x)
-      ==⟨ ap (λ y → (i a) · y) eq ⟩
+      =⟨ ap (λ y → (i a) · y) eq ⟩
       (i a) · b
-        ∎
+      =∎
 
     {- Group computation is a congruence -}
     comp-is-congr : ∀ a b x y → (a == b) → (x == y) → ((a · x) == (b · y))
@@ -186,60 +183,56 @@ record GroupHom {α β : ULevel} (G : Group {α}) (H : Group {β}) : Set (lmax �
   private
     prod-with-inv : (x y : G.U) → f (x ·ᴳ (G.i y)) == ((f x) ·ᴴ H.i (f y))
     prod-with-inv x y =
-      begin
         f (x ·ᴳ (G.i y))
-      ==⟨ ! (H.unit-r (f (x ·ᴳ (G.i y)))) ⟩
+      =⟨ ! (H.unit-r (f (x ·ᴳ (G.i y)))) ⟩
         (f (x ·ᴳ (G.i y))) ·ᴴ H.e
-      ==⟨ ap (λ φ → ((f (x ·ᴳ (G.i y)))) ·ᴴ φ) (! (H.inv-r (f y))) ⟩
+      =⟨ ap (λ φ → ((f (x ·ᴳ (G.i y)))) ·ᴴ φ) (! (H.inv-r (f y))) ⟩
         (f (x ·ᴳ (G.i y))) ·ᴴ ((f y) ·ᴴ (H.i (f y)))
-      ==⟨ ! (H.ass (f (x ·ᴳ (G.i y))) (f y) (H.i (f y))) ⟩
+      =⟨ ! (H.ass (f (x ·ᴳ (G.i y))) (f y) (H.i (f y))) ⟩
         ((f (x ·ᴳ (G.i y))) ·ᴴ (f y)) ·ᴴ (H.i (f y))
-      ==⟨ ap (λ φ → φ ·ᴴ H.i (f y)) lemma ⟩
+      =⟨ ap (λ φ → φ ·ᴴ H.i (f y)) lemma ⟩
         (f x) ·ᴴ (H.i (f y))
-      ∎
+      =∎
       where
         lemma : ((f (x ·ᴳ (G.i y))) ·ᴴ (f y)) == (f x)
         lemma =
-          begin
             ((f (x ·ᴳ (G.i y))) ·ᴴ (f y))
-          ==⟨ ! (pres-comp (x ·ᴳ (G.i y)) y) ⟩
+          =⟨ ! (pres-comp (x ·ᴳ (G.i y)) y) ⟩
             f ((x ·ᴳ (G.i y)) ·ᴳ y)
-          ==⟨ ap f (G.ass x (G.i y) y) ⟩
+          =⟨ ap f (G.ass x (G.i y) y) ⟩
             f (x ·ᴳ ((G.i y) ·ᴳ y))
-          ==⟨ ap (λ φ → f (x ·ᴳ φ)) (G.inv-l y) ⟩
+          =⟨ ap (λ φ → f (x ·ᴳ φ)) (G.inv-l y) ⟩
             f (x ·ᴳ G.e)
-          ==⟨ ap f (G.unit-r x) ⟩
+          =⟨ ap f (G.unit-r x) ⟩
             f x
-          ∎
+          =∎
 
   abstract
     {- Lemma: every homomorphism maps the identity to the identity -}
     id-to-id : (f G.e == H.e)
     id-to-id =
-        begin
           f G.e
-        ==⟨ ap f (! (G.inv-r G.e)) ⟩
+        =⟨ ap f (! (G.inv-r G.e)) ⟩
           f (G.e ·ᴳ (G.i G.e))
-        ==⟨ prod-with-inv G.e G.e ⟩
+        =⟨ prod-with-inv G.e G.e ⟩
           (f G.e) ·ᴴ (H.i (f G.e))
-        ==⟨ H.inv-r (f G.e) ⟩
+        =⟨ H.inv-r (f G.e) ⟩
           H.e
-        ∎
+        =∎
 
     {- Preserves inverse -}
     pres-i : ∀ g → f (G.i g) == H.i (f g)
     pres-i g =
-      begin
         f (G.i g)
-      ==⟨ ap f (! (G.unit-l (G.i g))) ⟩
+      =⟨ ap f (! (G.unit-l (G.i g))) ⟩
         f (G.e ·ᴳ (G.i g))
-      ==⟨ prod-with-inv G.e g ⟩
+      =⟨ prod-with-inv G.e g ⟩
         (f G.e) ·ᴴ (H.i (f g))
-      ==⟨ ap (λ φ → φ ·ᴴ (H.i (f g))) id-to-id ⟩
+      =⟨ ap (λ φ → φ ·ᴴ (H.i (f g))) id-to-id ⟩
         H.e ·ᴴ H.i (f g)
-      ==⟨ H.unit-l (H.i (f g)) ⟩
+      =⟨ H.unit-l (H.i (f g)) ⟩
         H.i (f g)
-      ∎
+      =∎
 
 infix 0 _→ᴳ_
 _→ᴳ_ = GroupHom
@@ -269,15 +262,14 @@ module _≃ᴳ_ {α β : ULevel} {G : Group {α}} {H : Group {β}} (iso : G ≃�
 
   preserves-comp : (a' b' : Group.U H) → g (a' ·ᴴ b') == (g a' ·ᴳ g b')
   preserves-comp a' b' =
-    begin
       g (a' ·ᴴ b')
-    ==⟨ ap g (ap2 (! (f-g a')) (! (f-g b')) {_·ᴴ_}) ⟩
+    =⟨ ap g (ap2 (! (f-g a')) (! (f-g b')) {_·ᴴ_}) ⟩
       g ((f (g a')) ·ᴴ (f (g b')))
-    ==⟨ ap g (! (pres-comp (g a') (g b'))) ⟩
+    =⟨ ap g (! (pres-comp (g a') (g b'))) ⟩
       g (f ((g a') ·ᴳ (g b')))
-    ==⟨ g-f (((g a') ·ᴳ (g b'))) ⟩
+    =⟨ g-f (((g a') ·ᴳ (g b'))) ⟩
       (g a') ·ᴳ (g b')
-    ∎
+    =∎
 
   g-hom : H →ᴳ G
   g-hom = group-hom g preserves-comp

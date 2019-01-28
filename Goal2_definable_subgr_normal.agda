@@ -4,7 +4,6 @@ open import lib.Equivalence
 open import lib.Funext
 open import lib.NType
 
-open import Eq-reasoning
 open import Group-basics
 
 
@@ -55,7 +54,7 @@ apd2 : {l k : ULevel} {X : Set l} {Y : X → Set k} {x x' : X} (f : (x : X) → 
 apd2 f idp = idp
 
 map-lift : {α γ : ULevel} {G : Group} {H : Group} (hom : H →ᴳ G) → (Subgrp {α} {γ} G → Subgrp {α} {γ} H)
-map-lift {α} {γ} {G} {H} hom sub-g = record { prop = prop-lemma  ; f = λ {a} → f-lemma a ; id =  id-lemma ; comp =  λ {a} {b} → comp-lemma a b}
+map-lift {α} {γ} {G} {H} hom sub-g = record { prop = prop-lemma  ; f = λ {a} → f-lemma a ; id =  id-lemma ; comp =  λ {a} {b} → comp-lemma a b; inv = {! !}}
   where
     open Subgrp sub-g
     open GroupHom hom renaming (f to h-to-g)
@@ -72,6 +71,8 @@ map-lift {α} {γ} {G} {H} hom sub-g = record { prop = prop-lemma  ; f = λ {a} 
     comp-lemma : (a b : Group.U H) → prop-lemma a → prop-lemma b → prop-lemma (Group.comp H a b)
     comp-lemma a b prop-a prop-b = coe (ap prop (! (pres-comp a b))) (comp prop-a prop-b)
 
+    inv-lemma : (a : Group.U H) → prop (h-to-g a) → prop (h-to-g (Group.i H a))
+    inv-lemma a prop-a = coe (ap prop (! (pres-i a))) (inv prop-a)
 
 
 postulate
