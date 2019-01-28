@@ -27,39 +27,40 @@ module Group-basics where
 -}
 module _ {α : ULevel} where
 
-  {- Definition of the properties that a group has. -}
-  is-associative : {X : Type α} (_⋆_ : X → X → X) → Type α
-  is-associative {X} _⋆_ = ((a b c : X) → ((a ⋆ b) ⋆ c) == (a ⋆ (b ⋆ c)))
+  module Properties where
 
-  is-unit-l : {X : Type α} (_⋆_ : X → X → X) → X → Type α
-  is-unit-l {X} _⋆_ e = ((a : X) → (e ⋆ a) == a)
+    {- Definition of the properties that a group has. -}
+    is-associative : {X : Type α} (_⋆_ : X → X → X) → Type α
+    is-associative {X} _⋆_ = ((a b c : X) → ((a ⋆ b) ⋆ c) == (a ⋆ (b ⋆ c)))
 
-  is-inverse-l : {X : Type α} (_⋆_ : X → X → X) (e : X) (i : X → X) → Type α
-  is-inverse-l {X} _⋆_ e i = ((a : X) → ((i a) ⋆ a) == e)
+    is-unit-l : {X : Type α} (_⋆_ : X → X → X) → X → Type α
+    is-unit-l {X} _⋆_ e = ((a : X) → (e ⋆ a) == a)
 
-  has-unit-l : {X : Type α} (_⋆_ : X → X → X) → Type α
-  has-unit-l {X} _⋆_ = Σ X (is-unit-l _⋆_)
+    is-inverse-l : {X : Type α} (_⋆_ : X → X → X) (e : X) (i : X → X) → Type α
+    is-inverse-l {X} _⋆_ e i = ((a : X) → ((i a) ⋆ a) == e)
 
-  has-inverse-l : {X : Type α} (_⋆_ : X → X → X) (e : X) → Type α
-  has-inverse-l {X} _⋆_ e = Σ (X → X) (is-inverse-l _⋆_ e)
+    has-unit-l : {X : Type α} (_⋆_ : X → X → X) → Type α
+    has-unit-l {X} _⋆_ = Σ X (is-unit-l _⋆_)
 
-  is-group : Magma → Type α
-  is-group M =  is-associative (Magma._∗_ M) × is-set (Magma.X M)
-             × (Σ (has-unit-l (Magma._∗_ M))
-                  λ { (e , isUnit) → has-inverse-l (Magma._∗_ M) e})
+    has-inverse-l : {X : Type α} (_⋆_ : X → X → X) (e : X) → Type α
+    has-inverse-l {X} _⋆_ e = Σ (X → X) (is-inverse-l _⋆_ e)
+
+    is-group : Magma → Type α
+    is-group M =  is-associative (Magma._∗_ M) × is-set (Magma.X M)
+               × (Σ (has-unit-l (Magma._∗_ M))
+                    λ { (e , isUnit) → has-inverse-l (Magma._∗_ M) e})
 
   record Group : Set (lsucc α) where
     constructor group
     field
       M : Magma
-      is-groupl : is-group M
-
+      is-group : Properties.is-group M
 
     U : Type α
     U = Magma.X M
 
     e : U
-    e = (fst ∘ fst ∘ snd ∘ snd) is-groupl
+    e = (fst ∘ fst ∘ snd ∘ snd) is-group
 
     comp : U → U → U
     comp = Magma._∗_ M
@@ -67,34 +68,34 @@ module _ {α : ULevel} where
     _·_ = comp
 
     i : U → U
-    i = (fst ∘ snd ∘ snd ∘ snd) is-groupl
+    i = (fst ∘ snd ∘ snd ∘ snd) is-group
 
-    ass : (a b c : U) → ((a · b) · c) == (a · (b · c))
-    ass = (fst is-groupl)
+    associative : (a b c : U) → ((a · b) · c) == (a · (b · c))
+    associative = (fst is-group)
 
     inv-l : (a : U) → ((i a) · a) == e
-    inv-l = (snd ∘ snd ∘ snd ∘ snd) is-groupl
+    inv-l = (snd ∘ snd ∘ snd ∘ snd) is-group
 
     unit-l : (a : U) → (e · a) == a
-    unit-l = (snd ∘ fst ∘ snd ∘ snd) is-groupl
+    unit-l = (snd ∘ fst ∘ snd ∘ snd) is-group
 
     set : is-set U
-    set = (fst ∘ snd) is-groupl
+    set = (fst ∘ snd) is-group
 
     inv-r : (a : U) → (a · (i a)) == e
     inv-r a =
         a · (i a)
       =⟨ ! (unit-l (a · (i a))) ⟩
         e · (a · (i a))
-      =⟨ ! (ass e a (i a)) ⟩
+      =⟨ ! (associative e a (i a)) ⟩
         (e · a) · (i a)
       =⟨ ap (λ φ → (φ · a) · i a) (! (inv-l (i a))) ⟩
         (((i (i a)) · (i a)) · a) · (i a)
-      =⟨ ap (λ φ → φ · (i a)) (ass (i (i a)) (i a) a) ⟩
+      =⟨ ap (λ φ → φ · (i a)) (associative (i (i a)) (i a) a) ⟩
         ((i (i a)) · ((i a)  · a)) · (i a)
       =⟨ ap (λ φ → ((i (i a)) · φ) · (i a)) (inv-l a) ⟩
         ((i (i a)) · e) · (i a)
-      =⟨ ass (i (i a)) e (i a) ⟩
+      =⟨ associative (i (i a)) e (i a) ⟩
         (i (i a)) · (e · (i a))
       =⟨ ap (λ φ → (i (i a)) · φ) (unit-l (i a)) ⟩
         (i (i a)) · (i a)
@@ -107,7 +108,7 @@ module _ {α : ULevel} where
         a · e
       =⟨ ap (λ φ → (a · φ)) (! (inv-l a)) ⟩
         a · ( (i a) · a)
-      =⟨ ! (ass a (i a) a) ⟩
+      =⟨ ! (associative a (i a) a) ⟩
         (a · (i a)) · a
       =⟨ ap (λ φ → (φ · a)) (inv-r a) ⟩
         e · a
@@ -121,7 +122,7 @@ module _ {α : ULevel} where
       (a · x)
       =⟨ ap (λ y → a · y) eq ⟩
       (a · ((i a) · b))
-      =⟨ ! (ass a (i a) b) ⟩
+      =⟨ ! (associative a (i a) b) ⟩
       ((a · (i a)) · b)
       =⟨ ap (λ y → y · b) (inv-r a) ⟩
       e · b
@@ -137,7 +138,7 @@ module _ {α : ULevel} where
       e · x
       =⟨ ap (λ y → y · x) (! (inv-l a)) ⟩
       ((i a) · a) · x
-      =⟨ ass (i a) a x ⟩
+      =⟨ associative (i a) a x ⟩
       (i a) · (a · x)
       =⟨ ap (λ y → (i a) · y) eq ⟩
       (i a) · b
@@ -188,7 +189,7 @@ record GroupHom {α β : ULevel} (G : Group {α}) (H : Group {β}) : Set (lmax �
         (f (x ·ᴳ (G.i y))) ·ᴴ H.e
       =⟨ ap (λ φ → ((f (x ·ᴳ (G.i y)))) ·ᴴ φ) (! (H.inv-r (f y))) ⟩
         (f (x ·ᴳ (G.i y))) ·ᴴ ((f y) ·ᴴ (H.i (f y)))
-      =⟨ ! (H.ass (f (x ·ᴳ (G.i y))) (f y) (H.i (f y))) ⟩
+      =⟨ ! (H.associative (f (x ·ᴳ (G.i y))) (f y) (H.i (f y))) ⟩
         ((f (x ·ᴳ (G.i y))) ·ᴴ (f y)) ·ᴴ (H.i (f y))
       =⟨ ap (λ φ → φ ·ᴴ H.i (f y)) lemma ⟩
         (f x) ·ᴴ (H.i (f y))
@@ -199,7 +200,7 @@ record GroupHom {α β : ULevel} (G : Group {α}) (H : Group {β}) : Set (lmax �
             ((f (x ·ᴳ (G.i y))) ·ᴴ (f y))
           =⟨ ! (pres-comp (x ·ᴳ (G.i y)) y) ⟩
             f ((x ·ᴳ (G.i y)) ·ᴳ y)
-          =⟨ ap f (G.ass x (G.i y) y) ⟩
+          =⟨ ap f (G.associative x (G.i y) y) ⟩
             f (x ·ᴳ ((G.i y) ·ᴳ y))
           =⟨ ap (λ φ → f (x ·ᴳ φ)) (G.inv-l y) ⟩
             f (x ·ᴳ G.e)
@@ -240,7 +241,7 @@ _→ᴳ_ = GroupHom
 →ᴳ-id : {α : ULevel} {G : Group {α}} → G →ᴳ G
 →ᴳ-id = group-hom (λ x → x) (λ g₁ g₂ → idp)
 
-→ᴳ-trans : {α β γ : ULevel}{G : Group {α}} {H : Group {β}} {J : Group {γ}} → (G →ᴳ H) → (H →ᴳ J) → (G →ᴳ J)
+→ᴳ-trans : {α β γ : ULevel} {G : Group {α}} {H : Group {β}} {J : Group {γ}} → (G →ᴳ H) → (H →ᴳ J) → (G →ᴳ J)
 →ᴳ-trans (group-hom g p) (group-hom h q) =
   group-hom (λ z → h (g z)) (λ a b → (ap h (p a b)) ∙ (q (g a) (g b)))
 
@@ -279,12 +280,6 @@ module _≃ᴳ_ {α β : ULevel} {G : Group {α}} {H : Group {β}} (iso : G ≃�
 
   sym : (H ≃ᴳ G)
   sym = g-hom , is-eq g f g-f f-g
-
-–>ᴳ : {α β : ULevel} {G : Group {α}} {H : Group {β}} → (iso : G ≃ᴳ H) → (G →ᴳ H)
-–>ᴳ = _≃ᴳ_.f-hom
-
-<–ᴳ : {α β : ULevel} {G : Group {α}} {H : Group {β}} → (G ≃ᴳ H) → (H →ᴳ G)
-<–ᴳ = _≃ᴳ_.g-hom
 
 sym : {α β : ULevel} (G : Group {α}) (H : Group {β}) → (G ≃ᴳ H) → (H ≃ᴳ G)
 sym G H = _≃ᴳ_.sym

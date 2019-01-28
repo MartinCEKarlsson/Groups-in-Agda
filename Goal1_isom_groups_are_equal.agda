@@ -15,6 +15,7 @@ open import Magma-basics
 
 module Goal1_isom_groups_are_equal where
 
+open Group-basics.Properties
 {- In this file we work towards the first goal of the project: isomorphisms
    between groups are equivalent to identities between groups in HoTT.
 
@@ -28,11 +29,10 @@ module Goal1_isom_groups_are_equal where
    underlying magma to be equivalent.
 -}
 
-
 module _ {α : ULevel} {M : Magma {α}} where
   open Magma M
-  {- We want the proofs that a Magma is a group to be propositions. -}
 
+  {- We want the proofs that a Magma is a group to be propositions. -}
   is-group-all-paths : (x y : is-group M) → (x == y)
   is-group-all-paths (isAssoc , isSet , (e , isUnit) , inv , isInv)
         (isAssoc' , isSet' , (e' , isUnit') , inv' , isInv')
@@ -79,7 +79,7 @@ module _ {α : ULevel} {M : Magma {α}} where
           (inv x) ∗ e'
         =⟨ ap (λ φ → (inv x) ∗ φ) (! (H.inv-r x)) ⟩
           (inv x) ∗ (x ∗ (inv' x))
-        =⟨ ! (G.ass (inv x) x (inv' x)) ⟩
+        =⟨ ! (G.associative (inv x) x (inv' x)) ⟩
           ((inv x) ∗ x) ∗ (inv' x)
         =⟨ ap (λ φ → (φ ∗ inv' x)) (G.inv-l x) ⟩
           e ∗ inv' x
@@ -118,7 +118,6 @@ module _ {α : ULevel} {M : Magma {α}} where
                      → (tpinv p) == (inv' , isInv')
           inv,isInv= {p} = pair= (inv1= p) (inv2= p)
 
-
   is-group-is-prop : is-prop (is-group M)
   is-group-is-prop = all-paths-is-prop is-group-all-paths
 
@@ -129,10 +128,10 @@ module _ {α : ULevel} where
     Group' = Σ Magma (λ X → (is-group X))
 
     Σ⟪_⟫ : Group → Group'
-    Σ⟪ group M is-groupl ⟫ = M , is-groupl
+    Σ⟪ group M is-group ⟫ = M , is-group
 
     -Σ⟪_⟫ : Group' → Group
-    -Σ⟪ M , is-groupl ⟫ = group M is-groupl
+    -Σ⟪ M , is-group ⟫ = group M is-group
 
     Group≃Group' : Group {α} ≃ Group'
     Group≃Group' = equiv f g f-g g-f
@@ -176,7 +175,6 @@ module _ {α : ULevel} where
         g-f : (x : G ≃ᴳ H) → g (f x) == x
         g-f x = idp
 
-
   magma-id≃group'-id : {G H : Group {α}} → (Group.M G == Group.M H) ≃ (Σ⟪ G ⟫ == Σ⟪ H ⟫)
   magma-id≃group'-id {G} {H} = equiv f g f-g g-f
     where
@@ -187,12 +185,11 @@ module _ {α : ULevel} where
       g = fst=
 
       f-g : {G H : Group {α}} → (b : Σ⟪ G ⟫ == Σ⟪ H ⟫) → f (g b) == b
-      f-g {group M is-groupl} {group .M .is-groupl} idp =
-          f (g {group M is-groupl} idp)
+      f-g {group M is-group} {group .M .is-group} idp =
+          f (g {group M is-group} idp)
         =⟨ pair== idp (prop-path (has-level-apply (prop-is-set is-group-is-prop) _ _) _ _) ⟩
           idp
         =∎
-
 
       g-f : {G H : Group {α}} → (a : Group.M G == Group.M H) → g {G} {H} (f a) == a
       g-f {group M x} {group .M y} idp = fst=-β idp (from-transp is-group idp

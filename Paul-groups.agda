@@ -1,5 +1,4 @@
 {-# OPTIONS --without-K --rewriting #-}
-open import Eq-reasoning
 open import Magma-basics
 
 open import lib.Equivalence
@@ -22,7 +21,7 @@ record Group' : Type (lsucc ℓ) where  -- conditions for a Magma to be a group
 
   open Magma M
 
-  U : Type ℓ 
+  U : Type ℓ
   U = X
 
   comp : U → U → U
@@ -41,7 +40,7 @@ record Group' : Type (lsucc ℓ) where  -- conditions for a Magma to be a group
   abstract
     congr : {a b c d : U} → (a == c) → (b == d) → (a · b) == (c · d)
     congr idp idp = idp
-  
+
     inv-r : (a : U) → (a · (i a)) == e
     inv-r a =
       a · (i a) =⟨ ! (unit-l (a · (i a))) ⟩
@@ -91,7 +90,7 @@ group-equiv = equiv f g f-g g-f
             { M = M
             ; e = e
             ; i = i
-            ; ass = ass
+            ; ass = associative
             ; unit-l = unit-l
             ; inv-l = inv-l
             ; set = set
@@ -99,14 +98,14 @@ group-equiv = equiv f g f-g g-f
       where
         open Group G
 
-    g : Group' → Group {ℓ} 
+    g : Group' → Group {ℓ}
     g G = group (M) ((ass) , ((set) , (((e) , unit-l) , i , (λ a → inv-l a))))
       where
         open Group' G
 
     f-g : (G : Group') → (f (g G) == G)
     f-g G = idp
-  
+
     g-f : (G : Group {ℓ}) → (g (f G) == G)
     g-f G = idp
 
@@ -114,14 +113,14 @@ group-equiv = equiv f g f-g g-f
 group= : (G H : Group') → Type ℓ
 group= G H = magma= (Group'.M G) (Group'.M H)
 
-_≅_ = group=    -- We use ≅ for group isomorphism, whereas ≃ means equivalence as usual. 
+_≅_ = group=  -- We use ≅ for group isomorphism, whereas ≃ means equivalence as usual.
 
 {- Underlying map of the isomorphism -}
 iso-map : {G H : Group'} → (G ≅ H) → (Group'.U G → Group'.U H)
 iso-map iso = –> (magma=.carrier-equiv iso)
 
 {- Inverse map of the ismorphism -}
-iso-map-inv : {G H : Group'} → (G ≅ H) → (Group'.U H → Group'.U G) 
+iso-map-inv : {G H : Group'} → (G ≅ H) → (Group'.U H → Group'.U G)
 iso-map-inv iso = <– (magma=.carrier-equiv iso)
 
 {- We prove some facts about isomorphisms -}
@@ -159,10 +158,10 @@ module _≅_ {G H : Group'} (iso : G ≅ H) where
 
   preserves-unit : f G.e == H.e
   preserves-unit = unique-solve {H} (f G.e) (f G.e) (f G.e) H.e lemma (H.unit-r (f G.e))
-    where 
+    where
       lemma : (f G.e ·ᴴ f G.e) == f G.e
       lemma =
-        (f G.e) ·ᴴ (f G.e) =⟨ ! (preserves-comp G.e G.e) ⟩ 
+        (f G.e) ·ᴴ (f G.e) =⟨ ! (preserves-comp G.e G.e) ⟩
         f (G.e ·ᴳ G.e) =⟨ ap f (G.unit-l G.e) ⟩
         f G.e =∎
 
@@ -170,8 +169,8 @@ module _≅_ {G H : Group'} (iso : G ≅ H) where
   preserves-inv a = unique-solve {H} (f a) H.e (f (G.i a)) (H.i (f a)) lemma (H.inv-r (f a))
     where
       lemma : ((f a) ·ᴴ (f (G.i a))) == H.e
-      lemma = 
-        ((f a) ·ᴴ (f (G.i a))) =⟨ ! (preserves-comp a (G.i a)) ⟩ 
+      lemma =
+        ((f a) ·ᴴ (f (G.i a))) =⟨ ! (preserves-comp a (G.i a)) ⟩
         f (a ·ᴳ (G.i a)) =⟨ ap f (G.inv-r a) ⟩
         f (G.e) =⟨ preserves-unit ⟩
         H.e =∎
@@ -179,6 +178,4 @@ module _≅_ {G H : Group'} (iso : G ≅ H) where
 
 {- Goal 1 of the project is to prove that isomorphic groups are equal -}
 group=-equiv : (G H : Group') → (G ≅ H) → (G == H)
-group=-equiv G H is = {!!}
-
-    
+group=-equiv G H is = {! !}
