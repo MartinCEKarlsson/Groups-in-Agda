@@ -9,20 +9,20 @@ open import Group-basics
 
 {- In this file we work towards the second goal of the project: definable subgroups are normal in HoTT -}
 
-module Goal2_definable_subgr_normal where
+module Goal2_definable_subgr_normal {α : ULevel} where
 
 {- From a proof that two groups are equal (G == H), we obtain a map from Subgrp G to Subgrp H using transport -}
-transp-subgrp : {α β : ULevel} {G H : Group} (p : G == H) → (Subgrp {α} {β} G) → (Subgrp H)
+transp-subgrp : {G H : Group {α}} (p : G == H) → (Subgrp G) → (Subgrp H)
 transp-subgrp p G' = transport Subgrp p G'
 
 {- We now use another way of finding a map from Subgrp G to Subgrp H using the identity -}
 {- firstly, we define the map idtoiso which takes an equality to an isomorphism in the trivial way -}
-idtoiso : {α : ULevel} {G H : Group {α}} → (G == H) → (G ≃ᴳ H)
-idtoiso {α} {G} {.G} idp = →ᴳ-id , is-eq (λ z → z) (λ z → z) (λ a → idp) (λ a → idp)
+idtoiso : {G H : Group {α}} → (G == H) → (G ≃ᴳ H)
+idtoiso {G} {.G} idp = →ᴳ-id , is-eq (λ z → z) (λ z → z) (λ a → idp) (λ a → idp)
 
 {- We 'lift' this isomorphism resulting from p to a map Subgrp G → Subgrp H -}
-idtoiso-subgrp : {α β : ULevel} {G H : Group} (p : G == H) → (Subgrp {α} {β} G) → (Subgrp {_} {β} H)
-idtoiso-subgrp {α} {β} {G} {.G} idp G' = G' -- We can actually just case split!
+idtoiso-subgrp : {G H : Group {α}} (p : G == H) → (Subgrp G) → (Subgrp H)
+idtoiso-subgrp {G} {.G} idp G' = G' -- We can actually just case split!
 -- idtoiso-subgrp {i} {G} {H} p G' = record { prop = λ x → Subgrp.prop G' (θ-inv(x)) ; f = Subgrp.f G' ; id = {! !} ; comp = {! p  !} }
   -- where
   --   module H = Group H
@@ -42,7 +42,7 @@ idtoiso-subgrp {α} {β} {G} {.G} idp G' = G' -- We can actually just case split
   --   θ-inv = g
 
 {- We want to prove that the previous two functions Subgrp G → Subgrp H are homotopic -}
-trans-equiv-idtoiso : {α β : ULevel} (G H : Group) → transp-subgrp {α} {β} {G} {H} == idtoiso-subgrp {α} {β} {G} {H}
+trans-equiv-idtoiso : (G H : Group) → transp-subgrp {G} {H} == idtoiso-subgrp {G} {H}
 trans-equiv-idtoiso G H = λ= (λ {idp → idp})
 
 -- (transport Subgroup p (f G)) == f G
@@ -53,13 +53,16 @@ trans-equiv-idtoiso G H = λ= (λ {idp → idp})
 apd2 : {l k : ULevel} {X : Set l} {Y : X → Set k} {x x' : X} (f : (x : X) → Y x) (p : x == x') → (transport Y p (f x) ) == f x'
 apd2 f idp = idp
 
-map-lift : {α γ : ULevel} {G : Group} {H : Group} (hom : H →ᴳ G) → (Subgrp {α} {γ} G → Subgrp {α} {γ} H)
-map-lift {α} {γ} {G} {H} hom sub-g = record { prop = prop-lemma  ; f = λ {a} → f-lemma a ; id =  id-lemma ; comp =  λ {a} {b} → comp-lemma a b; inv = {! !}}
+map-lift : {G : Group} {H : Group} (iso : G ≃ᴳ H) → (Subgrp G → Subgrp  H)
+map-lift {G} {H} iso sub-g = record { prop = prop-lemma  ; f = λ {a} → f-lemma a ; id =  id-lemma ; comp =  λ {a} {b} → comp-lemma a b; inv = λ {a} → inv-lemma a}
   where
+    hom : H →ᴳ G
+    hom = _≃ᴳ_.g-hom iso
+
     open Subgrp sub-g
     open GroupHom hom renaming (f to h-to-g)
 
-    prop-lemma : Group.U H → Set γ
+    prop-lemma : Group.U H → Set α
     prop-lemma h = prop (h-to-g h)
 
     f-lemma :  (a : Group.U H) → is-prop (prop-lemma a)
@@ -76,18 +79,31 @@ map-lift {α} {γ} {G} {H} hom sub-g = record { prop = prop-lemma  ; f = λ {a} 
 
 
 postulate
-  iso-implies-path : {α : ULevel} {G H : Group {α}} (iso : G ≃ᴳ H) → G == H
+  isotoid : {G H : Group {α}} (iso : G ≃ᴳ H) → G == H
+  iso-id-equiv : {G H : Group {α}} (iso : G ≃ᴳ H) → (idtoiso (isotoid iso)) == iso
+  --some-lemma : {G H : Group} (f : (I : Group) → (Subgrp I)) (iso : H ≃ᴳ G) → ((map-lift (Σ.fst iso) (f G)) == f H)
 
 
-module definable-normal-proof  {α β : ULevel} (f : (G : Group) → (Subgrp {α} {β} G)) where
+funqeq : {β : ULevel} {A B : Set β} {f g : A → B} (p : f == g) (a : A) → (f a == g a)
+funqeq idp a = idp
 
-  cool-lemma : {G : Group} (aut : G ≃ᴳ G) → ((map-lift (Σ.fst aut) (f G)) == f G)
-  cool-lemma aut =  {! !} ∙ (apd2 f (iso-implies-path aut)) -- apd f (iso-implies-path aut)
+module definable-normal-proof  (f : (G : Group) → (Subgrp G)) where
 
-  --new-goal : {G : Group}(aut : G ≃ᴳ G) → map-lift aut == transport Subgrp (iso-implies-path aut)
-  --new-goal aut = {! !}
+  map-lift-path-lemma : {G H : Group} (p : G == H) → (map-lift (idtoiso p)) == (transport Subgrp  p)
+  map-lift-path-lemma idp = {!!}
+
+  map-lift-lemma : {G : Group} (aut : G ≃ᴳ G) → map-lift aut == transport Subgrp (isotoid aut)
+  map-lift-lemma aut =
+      map-lift aut =⟨ ap map-lift (! (iso-id-equiv aut)) ⟩
+      map-lift (idtoiso (isotoid aut)) =⟨ map-lift-path-lemma ((isotoid aut)) ⟩
+      transport Subgrp (isotoid aut) =∎
+
+  final-result : {G : Group} (aut : G ≃ᴳ G) → ((map-lift aut (f G)) == f G)
+  final-result {G} aut =  funqeq (map-lift-lemma aut) (f G) ∙ (apd2 f (isotoid aut))
+
+
 
 
 {- We are working towards the following claim: all definable subgroups are normal -}
-def-subgroups-are-normal : {α β : ULevel} (f : (G : Group) → (Subgrp {α} {β} G)) → (H : Group) → (is-normal (f H))
+def-subgroups-are-normal : (f : (G : Group {α}) → (Subgrp G)) → (H : Group) → (is-normal (f H))
 def-subgroups-are-normal f H g h hprop = {!   !}
