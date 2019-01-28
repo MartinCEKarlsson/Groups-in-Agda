@@ -3,7 +3,7 @@ open import lib.Base
 open import lib.Equivalence
 open import lib.Funext
 open import lib.NType
-
+open import lib.Funext
 open import Group-basics
 
 
@@ -53,12 +53,9 @@ trans-equiv-idtoiso G H = λ= (λ {idp → idp})
 apd2 : {l k : ULevel} {X : Set l} {Y : X → Set k} {x x' : X} (f : (x : X) → Y x) (p : x == x') → (transport Y p (f x) ) == f x'
 apd2 f idp = idp
 
-map-lift : {G : Group} {H : Group} (iso : G ≃ᴳ H) → (Subgrp G → Subgrp  H)
-map-lift {G} {H} iso sub-g = record { prop = prop-lemma  ; f = λ {a} → f-lemma a ; id =  id-lemma ; comp =  λ {a} {b} → comp-lemma a b; inv = λ {a} → inv-lemma a}
+map-lift2 : {G : Group} {H : Group} (hom : H →ᴳ G) → (Subgrp G → Subgrp  H)
+map-lift2 {G} {H} hom sub-g = record { prop = prop-lemma  ; f = λ {a} → f-lemma a ; id =  id-lemma ; comp =  λ {a} {b} → comp-lemma a b; inv = λ {a} → inv-lemma a}
   where
-    hom : H →ᴳ G
-    hom = _≃ᴳ_.g-hom iso
-
     open Subgrp sub-g
     open GroupHom hom renaming (f to h-to-g)
 
@@ -77,6 +74,12 @@ map-lift {G} {H} iso sub-g = record { prop = prop-lemma  ; f = λ {a} → f-lemm
     inv-lemma : (a : Group.U H) → prop (h-to-g a) → prop (h-to-g (Group.i H a))
     inv-lemma a prop-a = coe (ap prop (! (pres-i a))) (inv prop-a)
 
+map-lift : {G : Group} {H : Group} (iso : G ≃ᴳ H) → (Subgrp G → Subgrp  H)
+map-lift {G} {H} iso sub-g = map-lift2 {G} {H} hom sub-g
+  where
+    hom : H →ᴳ G
+    hom = _≃ᴳ_.g-hom iso
+
 
 postulate
   isotoid : {G H : Group {α}} (iso : G ≃ᴳ H) → G == H
@@ -87,10 +90,28 @@ postulate
 funqeq : {β : ULevel} {A B : Set β} {f g : A → B} (p : f == g) (a : A) → (f a == g a)
 funqeq idp a = idp
 
+prop= : {G : Group {α}} (N M : Subgrp G) → Set (lsucc α)
+prop= N M =  (Subgrp.prop N) == (Subgrp.prop M)
+
+subgrp= : {G : Group {α}} {N M : Subgrp G} (eq : prop= N M) → (N == M)
+subgrp= eq = {!!}
+
+module Subgrp-encode-code {G : Group {α}} where
+
+  encode : (N M : Subgrp G) (eq : prop= N M) → (N == M)
+  encode record { prop = prop ; f = f ; id = id ; comp = comp ; inv = inv } record { prop = .prop ; f = f₁ ; id = id₁ ; comp = comp₁ ; inv = inv₁ } idp = {!!}
+    where
+      id= : id == id₁
+      id= = prop-path f id id₁
+
+      --comp= : comp == comp₁
+      --comp= = λ= (λ a → λ= (λ b → prop-path f {!!} {!!}))
+
+
 module definable-normal-proof  (f : (G : Group) → (Subgrp G)) where
 
   map-lift-path-lemma : {G H : Group} (p : G == H) → (map-lift (idtoiso p)) == (transport Subgrp  p)
-  map-lift-path-lemma idp = {!!}
+  map-lift-path-lemma idp = λ= (λ g → subgrp= idp)
 
   map-lift-lemma : {G : Group} (aut : G ≃ᴳ G) → map-lift aut == transport Subgrp (isotoid aut)
   map-lift-lemma aut =
