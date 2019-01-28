@@ -148,26 +148,25 @@ module _ {α : ULevel} where
     comp-is-congr : ∀ a b x y → (a == b) → (x == y) → ((a · x) == (b · y))
     comp-is-congr a .a x .x idp idp = idp
 
-  module _ {β : ULevel} where
-    record Subgrp (G : Group) : Set (lmax α (lsucc β)) where
-      private
-        module G = Group G
-      field
-        prop : G.U → Set β
-        f : ∀ {a : G.U} → is-prop( prop a)
-        id : prop G.e
-        comp : ∀ {a b : G.U} → prop a → prop b → prop (G.comp a b)
-        inv : ∀ {a : G.U} → prop a → prop (G.i a)
+  record Subgrp (G : Group) : Set (lsucc α) where
+    private
+      module G = Group G
+    field
+      prop : G.U → Set α
+      f : ∀ {a : G.U} → is-prop( prop a)
+      id : prop G.e
+      comp : ∀ {a b : G.U} → prop a → prop b → prop (G.comp a b)
+      inv : ∀ {a : G.U} → prop a → prop (G.i a)
 
-      prop-equality : ∀ a b → (a == b) → prop a → prop b
-      prop-equality a .a idp aprop = aprop
+    prop-equality : ∀ a b → (a == b) → prop a → prop b
+    prop-equality a .a idp aprop = aprop
 
-    {- Normal subgroups : -}
-    is-normal : {Grp : Group} → (Subgrp Grp) → Set (lmax α β)
-    is-normal {Grp} H = (g : U) → (h : U) → prop h → prop (g ·ᴳ (h ·ᴳ (iᴳ g)))
-      where
-        open Group Grp renaming (comp to _·ᴳ_; i to iᴳ)
-        open Subgrp H renaming (comp to _·ᴴ_)
+  {- Normal subgroups : -}
+  is-normal : {Grp : Group} → (Subgrp Grp) → Set α
+  is-normal {Grp} H = (g : U) → (h : U) → prop h → prop (g ·ᴳ (h ·ᴳ (iᴳ g)))
+    where
+      open Group Grp renaming (comp to _·ᴳ_; i to iᴳ)
+      open Subgrp H renaming (comp to _·ᴴ_)
 
 record GroupHom {α β : ULevel} (G : Group {α}) (H : Group {β}) : Set (lmax α β) where
   constructor group-hom
