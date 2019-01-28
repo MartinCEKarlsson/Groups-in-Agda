@@ -89,7 +89,7 @@ module _ {α : ULevel} {M : Magma {α}} where
 
       ↓-inv= : (inv , isInv) == (inv' , isInv')
                             [ (λ { (x , isU) → has-inverse-l _∗_ x}) ↓ unit= ]
-      ↓-inv= = from-transp (λ x → has-inverse-l _∗_ (fst x)) unit= inv,isInv=
+      ↓-inv= = from-transp (λ x → has-inverse-l _∗_ (fst x)) unit= (inv,isInv= {unit=})
         where
           tpinv : (p : e , isUnit == e' , isUnit') → has-inverse-l _∗_ e'
           tpinv p = transport (λ x → has-inverse-l _∗_ (fst x)) p (inv , isInv)
