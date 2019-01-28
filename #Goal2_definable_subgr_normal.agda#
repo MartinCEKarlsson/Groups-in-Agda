@@ -118,7 +118,7 @@ module Subgrp-encode-code {G : Group {α}} where
       f= = {!!}
 
       comp= : comp == comp₁
-      comp= = {!λ=-implicit!}  -- We need to use a version of implicit function extensionality here
+      comp= = {!!}  -- We need to use a version of implicit function extensionality here, it is proved above but not working in this context yet. 
   
       inv= : inv == inv₁
       inv= = {!!}
