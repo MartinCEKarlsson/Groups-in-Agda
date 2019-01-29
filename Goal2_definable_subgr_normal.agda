@@ -103,31 +103,92 @@ expl-to-impl f {a} = f a
 λ=-implicit : {β : ULevel} {A : Type α} {B : A → Type β} → {f g : ({a : A} → B a)} → ((a : A) → (f {a} == g {a})) → ((λ {x} → f {x}) == (λ {x} → g {x}))
 λ=-implicit ext = ap expl-to-impl (λ= ext)
 
-subgrp= : {G : Group {α}} {N M : Subgrp G} (eq : prop= N M) → (N == M)
-subgrp= eq = {!!}
+record is-subgrp {G : Group {α}} (prop : (Group.U G) → Set α) : Set (lsucc α) where
+  private
+    module G = Group G
+  field
+    f : ∀ (a : G.U) → is-prop( prop a)
+    id : prop G.e
+    comp : ∀ (a b : G.U) → prop a → prop b → prop (G.comp a b)
+    inv : ∀ (a : G.U) → prop a → prop (G.i a)
 
-module Subgrp-encode-code {G : Group {α}} where
 
-  encode : (N M : Subgrp G) (eq : prop= N M) → (N == M)
-  encode record { prop = prop ; f = f ; id = id ; comp = comp ; inv = inv } record { prop = .prop ; f = f₁ ; id = id₁ ; comp = comp₁ ; inv = inv₁ } idp = {!!}
+subgrp' : {G : Group {α}} → Set (lsucc α)
+subgrp' {G} = Σ (Group.U G → Set α) (λ y → is-subgrp {G} y)
+
+
+--=lemma2 : {G : Group {α}} {pr : (Group.U G) → Set α} (subgrp1 subgrp2 : is-subgrp {G} pr) (eq1 : (is-subgrp.f subgrp1) == (is-subgrp.f subgrp2)) → ⊤
+--=lemma2 = {!!}
+
+module _ where
+  open is-subgrp
+
+  =lemma2 : {G : Group {α}} {pr : (Group.U G) → Set α} (isg1 isg2 : is-subgrp {G} pr) (eq1 : f isg1 == f isg2) (eq2 : id isg1 == id isg2) (eq3 : comp isg1 == comp isg2) (eq4 : inv isg1 == inv isg2) → (isg1 == isg2)
+  =lemma2 record { f = .(f isg2) ; id = .(id isg2) ; comp = .(comp isg2) ; inv = .(inv isg2) } isg2 idp idp idp idp = idp
+
+  =lemma : {G : Group {α}} {pr : (Group.U G) → Set α} (isg1 isg2 : is-subgrp {G} pr) → (isg1 == isg2)
+  =lemma isg1 isg2 = =lemma2 isg1 isg2 f-eq id-eq comp-eq inv-eq
     where
-      id= : id == id₁
-      id= = prop-path f id id₁
+      f-eq : f isg1 == f isg2
+      f-eq = {!!}
 
-      f= : f == f₁
-      f= = {!!}
+      id-eq : id isg1 == id isg2
+      id-eq = {!!}
 
+      comp-eq : comp isg1 == comp isg2
+      comp-eq = {!!}
+
+      inv-eq : inv isg1 == inv isg2
+      inv-eq = {!!}
+
+sub= : {G : Group {α}} (pr1 pr2 : (Group.U G) → Set α) (p : pr1 == pr2) (subgr1 : is-subgrp {G} pr1) (subgr2 : is-subgrp {G} pr2) → (transport is-subgrp p subgr1 == subgr2)
+sub= pr1 pr2 p subgr1 subgr2 = =lemma (transport is-subgrp p subgr1) subgr2
+
+subgrp'= : {G : Group {α}} (a b : subgrp' {G}) (p : Σ.fst a == Σ.fst b) (pt : (transport is-subgrp p (Σ.snd a)) == (Σ.snd b)) → (a == b)
+subgrp'= (fst₁ , snd₁) (.fst₁ , .snd₁) idp idp = idp
+
+subgrp'-eq : {G : Group {α}} (a b : subgrp' {G}) (p : Σ.fst a == Σ.fst b) → (a == b)
+subgrp'-eq a b p = subgrp'= a b p (sub= (Σ.fst a) (Σ.fst b) p (Σ.snd a) (Σ.snd b))
+
+module _ {G : Group {α}} where
+  f : Subgrp G → subgrp' {G}
+  f record { prop = prop ; f = f ; id = id ; comp = comp ; inv = inv } = prop , record {f = λ a → f {a} ; id = id; comp = λ a b → comp {a} {b}; inv = λ a → inv {a}}
+
+  g : subgrp' {G} → Subgrp G
+  g (prop , record { f = f ; id = id ; comp = comp ; inv = inv }) = record{ prop = prop ; f = λ {a} → f a ; id = id ; comp = λ {a} {b} → comp a b ; inv = λ {a} → inv a}
+
+  f-g : (b : subgrp') → f (g b) == b
+  f-g b = idp
+
+  g-f : (a : Subgrp G) → g (f a) == a
+  g-f a = idp
+
+subgrp-eq : {G : Group {α}} {a b : Subgrp G} (p : Subgrp.prop a == Subgrp.prop b) → (a == b)
+subgrp-eq {G} {a} {b} p = path
+  where
+    prf : ((f a) == (f b))
+    prf = subgrp'-eq (f a) (f b) p
+
+<<<<<<< HEAD
       comp= : comp == comp₁
       comp= = {!!}  -- We need to use a version of implicit function extensionality here, it is proved above but not working in this context yet. 
   
       inv= : inv == inv₁
       inv= = {!!}
+=======
+    path : (a == b)
+    path =
+      a  =⟨ ! (g-f a) ⟩
+      g(f(a)) =⟨ ap g prf ⟩
+      g(f(b)) =⟨ g-f b ⟩
+      b =∎
+>>>>>>> 2a1288d99b81fe169a155c2d96233864551ab15a
 
 
 module definable-normal-proof  (f : (G : Group) → (Subgrp G)) where
 
   map-lift-path-lemma : {G H : Group} (p : G == H) → (map-lift (idtoiso p)) == (transport Subgrp  p)
-  map-lift-path-lemma idp = λ= (λ g → subgrp= idp)
+  map-lift-path-lemma idp = λ= (λ g → subgrp-eq idp)
 
   map-lift-lemma : {G : Group} (aut : G ≃ᴳ G) → map-lift aut == transport Subgrp (isotoid aut)
   map-lift-lemma aut =
