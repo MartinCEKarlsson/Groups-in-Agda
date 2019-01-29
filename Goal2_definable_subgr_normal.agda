@@ -5,6 +5,7 @@ open import lib.Funext
 open import lib.NType
 open import lib.Funext
 open import lib.types.Pi
+open import lib.PathGroupoid
 open import Group-basics
 
 
@@ -24,32 +25,10 @@ idtoiso {G} {.G} idp = →ᴳ-id , is-eq (λ z → z) (λ z → z) (λ a → idp
 {- We 'lift' this isomorphism resulting from p to a map Subgrp G → Subgrp H -}
 idtoiso-subgrp : {G H : Group {α}} (p : G == H) → (Subgrp G) → (Subgrp H)
 idtoiso-subgrp {G} {.G} idp G' = G' -- We can actually just case split!
--- idtoiso-subgrp {i} {G} {H} p G' = record { prop = λ x → Subgrp.prop G' (θ-inv(x)) ; f = Subgrp.f G' ; id = {! !} ; comp = {! p  !} }
-  -- where
-  --   module H = Group H
-  --   module G = Group G
-  --
-  --   equiv : (G ≃ᴳ H) -- The equivalence
-  --   equiv = idtoiso p
-  --
-  --   open GroupHom (Σ.fst equiv)
-  --
-  --   θ : (G.U → H.U)   -- The forward map of the equivalence
-  --   θ = GroupHom.f (Σ.fst equiv)
-  --
-  --   open is-hae (is-equiv→is-hae θ (Σ.snd equiv))
-  --
-  --   θ-inv : (H.U → G.U)  -- The backward map of the equivalence
-  --   θ-inv = g
 
 {- We want to prove that the previous two functions Subgrp G → Subgrp H are homotopic -}
 trans-equiv-idtoiso : (G H : Group) → transp-subgrp {G} {H} == idtoiso-subgrp {G} {H}
 trans-equiv-idtoiso G H = λ= (λ {idp → idp})
-
--- (transport Subgroup p (f G)) == f G
-
-! : {α : ULevel} {X : Type α} {x y : X} (p : x == y) → y == x
-! idp = idp
 
 apd2 : {l k : ULevel} {X : Set l} {Y : X → Set k} {x x' : X} (f : (x : X) → Y x) (p : x == x') → (transport Y p (f x) ) == f x'
 apd2 f idp = idp
@@ -130,16 +109,16 @@ module _ where
   =lemma isg1 isg2 = =lemma2 isg1 isg2 f-eq id-eq comp-eq inv-eq
     where
       f-eq : f isg1 == f isg2
-      f-eq = {!!}
+      f-eq = {! !}
 
       id-eq : id isg1 == id isg2
-      id-eq = {!!}
+      id-eq = {! !}
 
       comp-eq : comp isg1 == comp isg2
-      comp-eq = {!!}
+      comp-eq = {! !}
 
       inv-eq : inv isg1 == inv isg2
-      inv-eq = {!!}
+      inv-eq = {! !}
 
 sub= : {G : Group {α}} (pr1 pr2 : (Group.U G) → Set α) (p : pr1 == pr2) (subgr1 : is-subgrp {G} pr1) (subgr2 : is-subgrp {G} pr2) → (transport is-subgrp p subgr1 == subgr2)
 sub= pr1 pr2 p subgr1 subgr2 = =lemma (transport is-subgrp p subgr1) subgr2
@@ -169,23 +148,16 @@ subgrp-eq {G} {a} {b} p = path
     prf : ((f a) == (f b))
     prf = subgrp'-eq (f a) (f b) p
 
-<<<<<<< HEAD
-      comp= : comp == comp₁
-      comp= = {!!}  -- We need to use a version of implicit function extensionality here, it is proved above but not working in this context yet. 
-  
-      inv= : inv == inv₁
-      inv= = {!!}
-=======
     path : (a == b)
     path =
       a  =⟨ ! (g-f a) ⟩
       g(f(a)) =⟨ ap g prf ⟩
       g(f(b)) =⟨ g-f b ⟩
       b =∎
->>>>>>> 2a1288d99b81fe169a155c2d96233864551ab15a
 
 
-module definable-normal-proof  (f : (G : Group) → (Subgrp G)) where
+
+module definable-normal-proof  (f : (G : Group {α}) → (Subgrp G)) where
 
   map-lift-path-lemma : {G H : Group} (p : G == H) → (map-lift (idtoiso p)) == (transport Subgrp  p)
   map-lift-path-lemma idp = λ= (λ g → subgrp-eq idp)
