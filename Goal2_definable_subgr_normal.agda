@@ -99,6 +99,9 @@ subgrp' {G} = Σ (Group.U G → Set α) (λ y → is-subgrp {G} y)
 --=lemma2 : {G : Group {α}} {pr : (Group.U G) → Set α} (subgrp1 subgrp2 : is-subgrp {G} pr) (eq1 : (is-subgrp.f subgrp1) == (is-subgrp.f subgrp2)) → ⊤
 --=lemma2 = {!!}
 
+is-prop-is-prop : {ℓ : ULevel} {X : Set ℓ} → (is-prop (is-prop X))
+is-prop-is-prop = {!!}
+
 module _ where
   open is-subgrp
 
@@ -106,19 +109,19 @@ module _ where
   =lemma2 record { f = .(f isg2) ; id = .(id isg2) ; comp = .(comp isg2) ; inv = .(inv isg2) } isg2 idp idp idp idp = idp
 
   =lemma : {G : Group {α}} {pr : (Group.U G) → Set α} (isg1 isg2 : is-subgrp {G} pr) → (isg1 == isg2)
-  =lemma isg1 isg2 = =lemma2 isg1 isg2 f-eq id-eq comp-eq inv-eq
+  =lemma {G} isg1 isg2 = =lemma2 isg1 isg2 f-eq id-eq comp-eq inv-eq
     where
       f-eq : f isg1 == f isg2
-      f-eq = {! !}
+      f-eq = λ= (λ a → prop-path is-prop-is-prop (f isg1 a) (f isg2 a))
 
       id-eq : id isg1 == id isg2
-      id-eq = {! !}
+      id-eq = prop-path (f isg1 (Group.e G)) (id isg1) (id isg2)
 
       comp-eq : comp isg1 == comp isg2
-      comp-eq = {! !}
+      comp-eq = λ= (λ a → λ= (λ b → λ= (λ x → λ= λ y → prop-path (f isg1 (Group.comp G a b)) (comp isg1 a b x y) (comp isg2 a b x y))))
 
       inv-eq : inv isg1 == inv isg2
-      inv-eq = {! !}
+      inv-eq = λ= (λ a → λ= (λ b → prop-path (f isg1 (Group.i G a)) (inv isg1 a b) (inv isg2 a b)))
 
 sub= : {G : Group {α}} (pr1 pr2 : (Group.U G) → Set α) (p : pr1 == pr2) (subgr1 : is-subgrp {G} pr1) (subgr2 : is-subgrp {G} pr2) → (transport is-subgrp p subgr1 == subgr2)
 sub= pr1 pr2 p subgr1 subgr2 = =lemma (transport is-subgrp p subgr1) subgr2
