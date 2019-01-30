@@ -3,6 +3,7 @@ open import lib.Base
 open import lib.Equivalence
 open import lib.Funext
 open import lib.NType
+open import lib.NType2
 open import lib.Funext
 open import lib.types.Pi
 open import lib.PathGroupoid
@@ -100,7 +101,7 @@ subgrp' {G} = Σ (Group.U G → Set α) (λ y → is-subgrp {G} y)
 --=lemma2 = {!!}
 
 is-prop-is-prop : {ℓ : ULevel} {X : Set ℓ} → (is-prop (is-prop X))
-is-prop-is-prop = {!!}
+is-prop-is-prop = has-level-is-prop
 
 module _ where
   open is-subgrp

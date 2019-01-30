@@ -379,6 +379,10 @@ module _ {α : ULevel} {G H : Group {α}} where
   map-determ-hom' : {hom1 hom2 : GroupHom' G H} → (fst hom1 == fst hom2) → (hom1 == hom2)
   map-determ-hom' {hom1} {hom2} idp = pair= idp (λ= (λ g₁ → λ= λ g₂ → prop-path (paths-are-props (Group.set H)) (snd hom1 g₁ g₂) (snd hom2 g₁ g₂) ))
 
+  {- Map determines homomorphism for type GroupHom -}
+  map-determ-hom : {hom1 hom2 : GroupHom G H} → (GroupHom.f hom1 == GroupHom.f hom2) → (hom1 == hom2)
+  map-determ-hom {hom1} {hom2} idp = {!!}
+
   {- Eventual goal: -}
   --map-equal-iso-equal : (
   --map-equal-is-equal : 
