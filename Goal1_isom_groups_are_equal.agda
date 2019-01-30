@@ -215,3 +215,19 @@ module _ {α : ULevel} where
 
   isotoid : {G H : Group {α}} (iso : G ≃ᴳ H) → (G == H)
   isotoid = –> iso≃id
+
+  idtoiso' : {G H : Group {α}} → (G == H) → (G ≃ᴳ H)
+  idtoiso' {G} {.G} idp = →ᴳ-id , is-eq (λ z → z) (λ z → z) (λ a → idp) (λ a → idp)
+
+  iso-equiv : {G H : Group {α}} → {iso₁ iso₂ : G ≃ᴳ H} → (p : (GroupHom.f (Σ.fst iso₁)) == (GroupHom.f (Σ.fst iso₂))) → iso₁ == iso₂
+  iso-equiv p = {!!}
+
+  test-lemma2 : {G : Group {α}} → GroupHom.f (Σ.fst (idtoiso {G} idp)) == (coe idp)
+  test-lemma2 {G} = ap (λ φ → coe (ap fst (ap (fst magma-equiv) (ap fst φ)))) (!-inv-l ((is-equiv.g-f (is-equiv-inverse (snd Group≃Group')) Σ⟪ G ⟫)))
+
+  idtoiso-equiv : {G H : Group {α}} → idtoiso {G} {H} == idtoiso' {G} {H}
+  idtoiso-equiv {G} {H} = λ= (λ a → lemma a)
+    where
+      lemma : (a : G == H) → idtoiso a == idtoiso' a
+      lemma idp = iso-equiv (test-lemma2 {G})
+
