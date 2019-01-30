@@ -5,6 +5,7 @@ open import lib.Equivalence
 open import lib.Base
 open import lib.PathGroupoid
 open import lib.NType
+open import lib.NType2
 open import lib.types.Sigma
 open import lib.Univalence
 open import lib.Funext
@@ -271,14 +272,17 @@ is-prop-has-all-paths = all-paths-is-prop has-all-paths-has-all-paths
 has-all-paths-is-prop : {X : Set ℓ} → (has-all-paths (is-prop X))
 has-all-paths-is-prop = λ x y → {!!}
 
-paths-are-props : {X : Set ℓ} {a b : X} → (isSet : is-set X) → is-prop (a == b)
-paths-are-props {X} {a} {b} isSet = has-level-apply isSet a b
+paths-are-props : {ℓ : ULevel} {X : Set ℓ} {a b : X} → (isSet : is-set X) → is-prop (a == b)
+paths-are-props {ℓ} {X} {a} {b} isSet = has-level-apply isSet a b
 
 prop-is-prop : {X : Set ℓ} → (isSet : is-set X) → (is-prop (is-prop X))
 prop-is-prop isSet = {!!}
 
+lemma : {X : Set ℓ} → (is-prop X) → (is-prop (is-prop X))
+lemma xprop = {!!}
+
 is-prop-is-prop : {X : Set ℓ} → (is-prop (is-prop X))
-is-prop-is-prop = {!!}
+is-prop-is-prop = has-level-is-prop
 
 {- implicit function extensionality -}
 λ=-implicit : {β : ULevel} {A : Set ℓ} {B : A → Set β} → (f g : ({x : A} → (B x))) → ((x : A) → ((f {x}) == (g {x}))) → (f == g)
@@ -298,7 +302,8 @@ subgrp= {G} {M = record { prop = propᴹ ; f = fᴹ ; id = idᴹ ; comp = comp�
     comp-lemma = λ= (λ x → λ= (λ y → prop-path fᴹ (compᴹ x y) (compᴺ x y)))
 
     inv-lemma : invᴹ == invᴺ
-    inv-lemma = λ= (λ x → prop-path fᴹ (invᴹ x) {!invᴺ x!})
+    inv-lemma = λ= (λ x → prop-path fᴹ (invᴹ x) (invᴺ x))
+    
   
     f-lemma-1 : (–> expose-equiv fᴹ == –> expose-equiv fᴺ)
     f-lemma-1 = λ= (λ a → prop-path is-prop-is-prop ((–> expose-equiv fᴹ) a) ((–> expose-equiv fᴺ) a))
@@ -320,7 +325,60 @@ trans-to-idtoiso-lift : {G H : Group {ℓ}} (p : G == H) → ((transport Subgrp 
 trans-to-idtoiso-lift idp = λ= (λ G' → subgrp= idp)
 
     
+idtoiso-is-prop : {X Y : Set ℓ} → is-prop (X == Y → X ≃ Y)
+idtoiso-is-prop = has-level-in (λ f g → has-level-in ({!!} , {!!}))
+
+idtoiso-has-all-paths : {X Y : Set ℓ} → has-all-paths (X == Y → X ≃ Y)
+idtoiso-has-all-paths {X} {Y} f g = λ= (λ x → lemma1 x)
+  where
+    lemma1 : (x : X == Y) → f x == g x
+    lemma1 idp = {!!}
+
+equivalence-is-prop : {X Y : Set ℓ} → has-all-paths (X ≃ Y)
+equivalence-is-prop eq1 eq2 = {!!}
 
 {- Final goal: -}
 def-subgroups-are-normal : (f : (G : Group {ℓ}) → (Subgrp G)) → (H : Group) → (is-normal (f H))
 def-subgroups-are-normal f H g h hprop = {!  !}
+
+
+{- In the following module we prove that two isomorphisms are equal if their underlying maps are equal -}
+
+{- firstly we show that if their underlying homomorphisms are equal, than the isomorphisms are equal -}
+
+module _ {α : ULevel} {G H : Group {α}} where
+  
+{-
+  hom1 : G →ᴳ H
+  hom1 = Σ.fst iso1
+
+  hom2 : G →ᴳ H
+  hom2 = Σ.fst iso2
+
+  module G = Group G
+  module H = Group H
+  module hom1 = GroupHom hom1
+  module hom2 = GroupHom hom2
+-}
+
+  --func-p-equiv-p : {X Y : Set ℓ} → {f g : X → Y} → (fequiv : is-equiv f) → (gequiv : is-equiv g) → (f == g) → (fequiv == gequiv)
+  --func-p-equiv-p = ?
+
+  hom-equal-iso-equal :  (iso1 iso2 : G ≃ᴳ H) → (Σ.fst iso1 == Σ.fst iso2) → (iso1 == iso2)
+  hom-equal-iso-equal (.(fst iso2) , snd) iso2 idp = {!!}
+
+  {- We give an alternative definition of a group homomorphism -}
+  GroupHom' : {α β : ULevel} (G : Group {α}) (H : Group {β}) → Set (lmax α β)
+  GroupHom' G H = Σ (Group.U G → Group.U H) (λ f → ((g₁ g₂ : Group.U G) → f (Group.comp G g₁ g₂) == Group.comp H (f g₁) (f g₂)))
+
+  {- We prove that the two definitions are equivalent -}
+  GroupHom-equiv-GroupHom' : GroupHom' G H ≃ GroupHom G H
+  GroupHom-equiv-GroupHom' = (λ hom' → group-hom (fst hom') (snd hom')) , record { g = λ hom → (GroupHom.f hom) , (GroupHom.pres-comp hom) ; f-g = λ b → idp ; g-f = λ a → idp ; adj = λ a → idp }
+
+  {- For two homomorphisms of type GroupHom', if their underlying map is equal, than the homomorphisms are equal -}
+  map-determ-hom' : {hom1 hom2 : GroupHom' G H} → (fst hom1 == fst hom2) → (hom1 == hom2)
+  map-determ-hom' {hom1} {hom2} idp = pair= idp (λ= (λ g₁ → λ= λ g₂ → prop-path (paths-are-props (Group.set H)) (snd hom1 g₁ g₂) (snd hom2 g₁ g₂) ))
+
+  {- Eventual goal: -}
+  --map-equal-iso-equal : (
+  --map-equal-is-equal : 
