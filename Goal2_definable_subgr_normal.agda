@@ -217,7 +217,47 @@ module _  (f : (G : Group {α}) → (Subgrp G)) where
   lift-aut-retains-subgrp {G} aut =  funqeq (lift-aut-lemma2 aut) (f G) ∙ (apd2 f (isotoid aut))
 
 
+module _ {G : Group {α}} where
+  open Group G
+  conj-map : (a : U) → (U → U)
+  conj-map a g = a · (g · (i a))
+
+  conj-map-inv : (a : U) → (conj-map a) ∘ (conj-map (i a)) == idf U
+  conj-map-inv a = λ= (λ x →
+    (conj-map a (conj-map (i a) x)) =⟨ {!!} ⟩
+    x =∎)
+
+  module _ (a : U) where
+
+    conj-map-is-hom : (g₁ g₂ : U) → conj-map a (g₁ · g₂) == ((conj-map a g₁) · (conj-map a g₂))
+    conj-map-is-hom g₁ g₂ =
+      a · ((g₁ · g₂) · (i a)) =⟨ ap (λ ϕ → a · ϕ) (associative g₁ g₂ (i a)) ⟩
+      a · (g₁ · (g₂ · (i a))) =⟨ ap (λ ϕ → a · (g₁ · ϕ)) (! (unit-l ((g₂ · (i a))))) ⟩
+      a · (g₁ · ( e · (g₂ · (i a)))) =⟨ ap (λ ϕ → a · (g₁ · (ϕ · (g₂ · (i a))))) (! (inv-l a)) ⟩
+      a · (g₁ · (((i a) · a ) · (g₂ · (i a)))) =⟨ ap (λ ϕ → a · (g₁ · ϕ) ) (associative (i a) a (g₂ · (i a))) ⟩
+      a · (g₁ · ((i a) ·(a · (g₂ · (i a))))) =⟨ ap (λ ϕ → a · ϕ) (! (associative g₁ ((i a)) ((a · (g₂ · (i a)))))) ⟩
+      a · ((g₁ · (i a)) ·(a · (g₂ · (i a)))) =⟨ ! (associative a ((g₁ · (i a))) ((a · (g₂ · (i a))))) ⟩
+      (a · (g₁ · (i a))) ·(a · (g₂ · (i a))) =∎
+
+    conj-hom : GroupHom G G
+    conj-hom = group-hom (conj-map a) conj-map-is-hom
+
+
+    conj-hom-g-f : (b : U) → (conj-map (i a) (conj-map a b)) == b
+    conj-hom-g-f b =
+      conj-map (i a) (conj-map a b) =⟨ ap (λ ϕ → conj-map (i a) (conj-map ϕ b)) (! (inv-inv-is-unit a)) ⟩
+      conj-map (i a) (conj-map (i (i a)) b) =⟨ funqeq (conj-map-inv (i a)) b ⟩
+      b =∎
+
+    conj-hom-is-equiv : is-equiv (conj-map a)
+    conj-hom-is-equiv = is-eq (conj-map a) (conj-map (i a)) (λ b → funqeq (conj-map-inv a) b) (conj-hom-g-f)
+
+    conj-aut : G ≃ᴳ G
+    conj-aut = conj-hom , conj-hom-is-equiv
+
+is-normal' : {G : Group {α}} (H : Subgrp G) → Set (lsucc α)
+is-normal' {G} H = (a : Group.U G) → (lift-iso-over-subgrp {G} {G} (conj-aut a) H) == H
 
 {- We are working towards the following claim: all definable subgroups are normal -}
---def-subgroups-are-normal : (f : (G : Group {α}) → (Subgrp G)) → (H : Group) → (is-normal (f H))
---def-subgroups-are-normal f H g h hprop = {!   !}
+def-subgroups-are-normal' : (f : (G : Group {α}) → (Subgrp G)) → (H : Group) → (is-normal' (f H))
+def-subgroups-are-normal' f H =  λ a → lift-aut-retains-subgrp f (conj-aut a)

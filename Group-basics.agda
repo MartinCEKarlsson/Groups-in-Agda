@@ -103,6 +103,9 @@ module _ {α : ULevel} where
         e
       =∎
 
+    postulate
+      inv-inv-is-unit : (a : U) → (i (i a)) == a
+
     unit-r : (a : U) → (a · e) == a
     unit-r a =
         a · e
