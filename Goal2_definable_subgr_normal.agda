@@ -224,7 +224,14 @@ module _ {G : Group {α}} where
 
   conj-map-inv : (a : U) → (conj-map a) ∘ (conj-map (i a)) == idf U
   conj-map-inv a = λ= (λ x →
-    (conj-map a (conj-map (i a) x)) =⟨ {!!} ⟩
+    (conj-map a (conj-map (i a) x)) =⟨ idp ⟩
+    a · (( (i a) · (x · (i (i a))) ) · (i a)) =⟨ ! (associative a ((i a) · (x · (i (i a)))) (i a)) ⟩
+    (a · ( (i a) · (x · (i (i a))) )) · (i a) =⟨ ap (λ y → y · (i a)) (! (associative a (i a) (x · (i (i a))))) ⟩
+    (( a · (i a)) · (x · (i (i a))) ) · (i a) =⟨ ap (λ y → (y · (x · (i (i a))) ) · (i a)) (inv-r a) ⟩
+    (e · (x · (i (i a))) ) · (i a) =⟨ ap (λ y → y · (i a)) (unit-l (x · (i (i a)))) ⟩
+    (x · (i (i a))) · (i a) =⟨ associative x (i (i a)) (i a) ⟩
+    x · ((i (i a)) · (i a)) =⟨ ap (λ y → x · y) (inv-l (i a)) ⟩
+    x · e =⟨ unit-r x ⟩
     x =∎)
 
   module _ (a : U) where
