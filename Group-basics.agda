@@ -144,6 +144,12 @@ module _ {α : ULevel} where
       (i a) · b
       =∎
 
+    unique-solve : ∀ a b x y → (a · x) == b → (a · y) == b → x == y
+    unique-solve a b x y p q =
+      x =⟨ unique-solv a b x p ⟩
+      (i a) · b =⟨ ! (unique-solv a b y q) ⟩
+      y =∎
+
     {- Group computation is a congruence -}
     comp-is-congr : ∀ a b x y → (a == b) → (x == y) → ((a · x) == (b · y))
     comp-is-congr a .a x .x idp idp = idp
@@ -157,6 +163,21 @@ module _ {α : ULevel} where
       a · ( (i a) · (i (i a)) ) =⟨ ap (λ x → a · x) (inv-r (i a)) ⟩
       a · e =⟨ unit-r a ⟩
       a =∎
+
+    inv-is-unique : ∀ a i' → ((a · i') == e) → (i' == (i a))
+    inv-is-unique a i' p = unique-solve a e i' (i a) p (inv-r a)
+
+    inv-of-comp : ∀ a b → ((i b) · (i a)) == (i (a · b))
+    inv-of-comp a b = inv-is-unique (a · b) ((i b) · (i a)) path
+      where
+        path : ((a · b) · (i b · i a)) == e
+        path = 
+          (a · b) · (i b · i a) =⟨ ! (associative (a · b) (i b) (i a)) ⟩
+          ((a · b) · i b) · (i a) =⟨ ap (λ φ → φ · (i a)) (associative a b (i b)) ⟩
+          (a · (b · i b)) · (i a) =⟨ ap (λ φ → (a · φ) · (i a)) (inv-r b) ⟩
+          (a · e) · (i a) =⟨ ap (λ φ → φ · (i a)) (unit-r a) ⟩
+          a · (i a) =⟨ inv-r a ⟩
+          e =∎
 
   record Subgrp (G : Group) : Set (lsucc α) where
     private

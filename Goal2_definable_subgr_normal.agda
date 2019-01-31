@@ -308,3 +308,51 @@ def-subgroups-are-normal' f G' =  λ a → lift-aut-retains-subgrp f (ConjAut.co
 {- Lastly, using the is-normal-to-is-normal' function that we set up in the previous module we can prove our final goal, that all definable subgroups are normal in HoTT -}
 def-subgroups-are-normal : (f : (G : Group {α}) → (Subgrp G)) → (G' : Group {α}) → (is-normal (f G'))
 def-subgroups-are-normal f G' = normal-to-normal'.is-normal'-to-is-normal {G'} {f G'} (def-subgroups-are-normal' f G')
+
+
+
+{- EXAMPLE : CENTER -}
+
+{- We will need the following auxiliary lemma later on -}
+prop-dep-prod : {l j : ULevel} {X : Set l} {Y : X → Set j} (ihp : (x : X) → is-prop (Y x)) → is-prop ((x : X) → Y x)
+prop-dep-prod ihp = all-paths-is-prop (λ f g → λ= (λ x → prop-path (ihp x) (f x) (g x)))
+
+{- We show that the center is a definable subgroup, that is, can be uniformly defined as a dependent type, depending on the group G -}
+center : (G : Group {α}) → Subgrp G
+center G = record { prop = λ g → in-center g ; f = in-center-is-prop ; id = unit-in-center ; comp = center-closed-comp ; inv = center-closed-inv }
+  where
+    open Group G
+
+    in-center : (g : U) → Set α
+    in-center g = (h : U) → (h · g) == (g · h)
+
+    in-center-is-prop : {g : U} → is-prop (in-center g)
+    in-center-is-prop = prop-dep-prod (λ x → paths-are-props set)
+
+    unit-in-center : in-center e
+    unit-in-center = λ h → 
+      h · e =⟨ unit-r h ⟩
+      h =⟨ ! (unit-l h) ⟩
+      e · h =∎
+
+    center-closed-comp : {a b : U} → in-center a → in-center b → in-center (a · b)
+    center-closed-comp {a} {b} ac bc = λ h → 
+      h · (a · b) =⟨ ! (associative h a b) ⟩
+      (h · a) · b =⟨ ap (λ φ → φ · b) (ac h) ⟩
+      (a · h) · b =⟨ associative a h b ⟩
+      a · (h · b) =⟨ ap (λ φ → a · φ) (bc h) ⟩
+      a · (b · h) =⟨ ! (associative a b h) ⟩
+      (a · b) · h =∎
+
+    center-closed-inv : {a : U} → in-center a → in-center (i a)
+    center-closed-inv {a} ac = λ h → 
+      h · (i a) =⟨ ap (λ φ → φ · (i a)) (! (inv-inv-is-unit h)) ⟩
+      (i (i h)) · (i a) =⟨ inv-of-comp a (i h)  ⟩
+      i ( a · (i h) ) =⟨ ap (λ φ → i φ) (! (ac (i h))) ⟩
+      i ( (i h) · a) =⟨ ! (inv-of-comp (i h) a) ⟩
+      (i a) · (i (i h)) =⟨ ap (λ φ → (i a) · φ) (inv-inv-is-unit h) ⟩
+      (i a) · h =∎
+
+{- Thus, using the main theorem that we proved in this goal, we can show that the center is normal -}
+center-is-normal : {G : Group {α}} → is-normal (center G)
+center-is-normal {G} = def-subgroups-are-normal center G
