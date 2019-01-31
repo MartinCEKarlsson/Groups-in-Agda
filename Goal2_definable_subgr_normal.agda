@@ -265,39 +265,46 @@ module ConjAut {G : Group {α}} where
   conj-aut : (a : U) → G ≃ᴳ G
   conj-aut a = conj-hom a , conj-hom-is-equiv a
 
+{- Based on the previous module we can now give an alternative definition of normal subgroups that suits are pruposes well, namely we define a subgroup to be normal if the lifted conjugation automorphims map the subgroup onto itself -}
 is-normal' : {G : Group {α}} (H : Subgrp G) → Set (lsucc α)
 is-normal' {G} H = (a : Group.U G) → (lift-iso-over-subgrp {G} {G} (ConjAut.conj-aut a) H) == H
 
+{- This should be equivalent to the usual definition of normal subgroups that we defined in the group-basics file. For our purposes it is sufficient to show that is-normal' implies is-normal. We will do so in the next module -}
 module normal-to-normal' {G : Group {α}} {H : Subgrp G} where
 
   open Group G
   open Subgrp
 
   private 
-  
+  {- the following function takes the subgroup H < G and produces for an element (a : G) the conjugated subgroup aH(i a), that is, it applies the lifted conjugation automorphism to the subgroup. We denote this as φₐ[H] where φₐ : G → G : x ↦ a · x · (i a) -}
     conj-subgr : (a : U) → Subgrp G
     conj-subgr a =  lift-iso-over-subgrp (ConjAut.conj-aut {G} a) H
 
-    {- iso-lift prop composition -}
+    {- Here we show that if two groups G and G' are isomorphic, the isomorphism preserves subgroups. Basically we prove that map-lift of an isomorphism does exactly what it is supposed to do  -}
     iso-lift-prop-comp : {G' : Group {α}} → (iso : G ≃ᴳ G') → (h : U) → prop H h → prop ((lift-iso-over-subgrp iso) H) ((GroupHom.f (fst iso)) h)
-    iso-lift-prop-comp iso h proph = {!!}
+    iso-lift-prop-comp iso h proph = coe (ap (prop H) (! (is-equiv.g-f (snd iso) h))) proph
   
-    {- Subgroup H lifted over the conjugacy automorphism (conj-aut a) contain the g · h · (i g) -}
+    {- As a specific instance of the previous lemma, we can show that φₐ[H], the subgroup H lifted over the conjugacy automorphism (conj-aut a), contains all the elements of the form a · h · (i a) for h in H-}
     lift-subgr-conj : (a : U) → (h : U) → prop H h → prop (conj-subgr a) (a · (h · (i a)))
-    lift-subgr-conj a u proph = {!!}
+    lift-subgr-conj a h proph = iso-lift-prop-comp {G} (ConjAut.conj-aut {G} a ) h proph
 
+    {- The following are two obvious auxiliary lemma's that will be useful -} 
     eq-subgrps-have-eq-props : {N : Subgrp G} → (p : N == H) → (prop N == prop H) 
     eq-subgrps-have-eq-props idp = idp
   
     eq-props-elts : {N : Subgrp G} → (p : prop N == prop H) → (a : U) → (prop N a) → (prop H a)
     eq-props-elts {N = record { prop = prop ; f = f ; id = id ; comp = comp ; inv = inv }} idp a = coe idp
 
-  {- the definitions is-normal and is-normal' should be equivalent. For our purposes it is sufficient to have a map going one way -}
+  {- We can now prove that is-normal' implies is-normal. We are given elements (a : G) and (h : H) and we want to prove that a · h · (i a) is in H. Using (is-normal' a) we have a proof that φₐ[H] == H as subgroups of G, where φₐ : G → G : x ↦ a · x · (ia) is the conjugation map for a. Therefore, their props are equal, and from the 'lift-subgr-conj' lemma we can deduce that a · h · (i a) is in φₐ[H], hence we can conclude that it is also in H -}
   is-normal'-to-is-normal : is-normal' H → is-normal H
-  is-normal'-to-is-normal Hnorm' = λ a h x →  eq-props-elts {conj-subgr a} (eq-subgrps-have-eq-props (Hnorm' a)) ((a · (h · (i a)))) (lift-subgr-conj a h x)
+  is-normal'-to-is-normal Hnorm' = λ a h proph →  eq-props-elts {conj-subgr a} (eq-subgrps-have-eq-props (Hnorm' a)) ((a · (h · (i a)))) (lift-subgr-conj a h proph)
 
 
+{- Finally, we prove the second goal of the project in two steps -}
+{- Firstly, we show that definable subgroups are normal', according to our alternative defition of normal subgroups. This follows straight from the machinery that we set up earlier in the file, namely the fact that for all group isomorphism φ : G → H we have φ[f G] == f G. In particular, we can apply this to the conjugation automorphisms that we are using in our alternative definition of is-normal' -}
+def-subgroups-are-normal' : (f : (G : Group {α}) → (Subgrp G)) → (G' : Group {α}) → (is-normal' (f G'))
+def-subgroups-are-normal' f G' =  λ a → lift-aut-retains-subgrp f (ConjAut.conj-aut a)
 
-{- We are working towards the following claim: all definable subgroups are normal -}
-def-subgroups-are-normal' : (f : (G : Group {α}) → (Subgrp G)) → (H : Group) → (is-normal' (f H))
-def-subgroups-are-normal' f H =  λ a → lift-aut-retains-subgrp f (ConjAut.conj-aut a)
+{- Lastly, using the is-normal-to-is-normal' function that we set up in the previous module we can prove our final goal, that all definable subgroups are normal in HoTT -}
+def-subgroups-are-normal : (f : (G : Group {α}) → (Subgrp G)) → (G' : Group {α}) → (is-normal (f G'))
+def-subgroups-are-normal f G' = normal-to-normal'.is-normal'-to-is-normal {G'} {f G'} (def-subgroups-are-normal' f G')
