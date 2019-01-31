@@ -217,54 +217,87 @@ module _  (f : (G : Group {α}) → (Subgrp G)) where
   lift-aut-retains-subgrp {G} aut =  funqeq (lift-aut-lemma2 aut) (f G) ∙ (apd2 f (isotoid aut))
 
 
-module _ {G : Group {α}} where
-  open Group G
-  conj-map : (a : U) → (U → U)
-  conj-map a g = a · (g · (i a))
+module ConjAut {G : Group {α}} where
 
-  conj-map-inv : (a : U) → (conj-map a) ∘ (conj-map (i a)) == idf U
-  conj-map-inv a = λ= (λ x →
-    (conj-map a (conj-map (i a) x)) =⟨ idp ⟩
-    a · (( (i a) · (x · (i (i a))) ) · (i a)) =⟨ ! (associative a ((i a) · (x · (i (i a)))) (i a)) ⟩
-    (a · ( (i a) · (x · (i (i a))) )) · (i a) =⟨ ap (λ y → y · (i a)) (! (associative a (i a) (x · (i (i a))))) ⟩
-    (( a · (i a)) · (x · (i (i a))) ) · (i a) =⟨ ap (λ y → (y · (x · (i (i a))) ) · (i a)) (inv-r a) ⟩
-    (e · (x · (i (i a))) ) · (i a) =⟨ ap (λ y → y · (i a)) (unit-l (x · (i (i a)))) ⟩
-    (x · (i (i a))) · (i a) =⟨ associative x (i (i a)) (i a) ⟩
-    x · ((i (i a)) · (i a)) =⟨ ap (λ y → x · y) (inv-l (i a)) ⟩
-    x · e =⟨ unit-r x ⟩
-    x =∎)
+  private 
 
-  module _ (a : U) where
+    open Group G
+    conj-map : (a : U) → (U → U)
+    conj-map a g = a · (g · (i a))
 
-    conj-map-is-hom : (g₁ g₂ : U) → conj-map a (g₁ · g₂) == ((conj-map a g₁) · (conj-map a g₂))
-    conj-map-is-hom g₁ g₂ =
-      a · ((g₁ · g₂) · (i a)) =⟨ ap (λ ϕ → a · ϕ) (associative g₁ g₂ (i a)) ⟩
-      a · (g₁ · (g₂ · (i a))) =⟨ ap (λ ϕ → a · (g₁ · ϕ)) (! (unit-l ((g₂ · (i a))))) ⟩
-      a · (g₁ · ( e · (g₂ · (i a)))) =⟨ ap (λ ϕ → a · (g₁ · (ϕ · (g₂ · (i a))))) (! (inv-l a)) ⟩
-      a · (g₁ · (((i a) · a ) · (g₂ · (i a)))) =⟨ ap (λ ϕ → a · (g₁ · ϕ) ) (associative (i a) a (g₂ · (i a))) ⟩
-      a · (g₁ · ((i a) ·(a · (g₂ · (i a))))) =⟨ ap (λ ϕ → a · ϕ) (! (associative g₁ ((i a)) ((a · (g₂ · (i a)))))) ⟩
-      a · ((g₁ · (i a)) ·(a · (g₂ · (i a)))) =⟨ ! (associative a ((g₁ · (i a))) ((a · (g₂ · (i a))))) ⟩
-      (a · (g₁ · (i a))) ·(a · (g₂ · (i a))) =∎
+    conj-map-inv : (a : U) → (conj-map a) ∘ (conj-map (i a)) == idf U
+    conj-map-inv a = λ= (λ x →
+      (conj-map a (conj-map (i a) x)) =⟨ idp ⟩
+      a · (( (i a) · (x · (i (i a))) ) · (i a)) =⟨ ! (associative a ((i a) · (x · (i (i a)))) (i a)) ⟩
+      (a · ( (i a) · (x · (i (i a))) )) · (i a) =⟨ ap (λ y → y · (i a)) (! (associative a (i a) (x · (i (i a))))) ⟩
+      (( a · (i a)) · (x · (i (i a))) ) · (i a) =⟨ ap (λ y → (y · (x · (i (i a))) ) · (i a)) (inv-r a) ⟩
+      (e · (x · (i (i a))) ) · (i a) =⟨ ap (λ y → y · (i a)) (unit-l (x · (i (i a)))) ⟩
+      (x · (i (i a))) · (i a) =⟨ associative x (i (i a)) (i a) ⟩
+      x · ((i (i a)) · (i a)) =⟨ ap (λ y → x · y) (inv-l (i a)) ⟩
+      x · e =⟨ unit-r x ⟩
+      x =∎)
 
-    conj-hom : GroupHom G G
-    conj-hom = group-hom (conj-map a) conj-map-is-hom
+    module _ (a : Group.U G) where
+
+      conj-map-is-hom : (g₁ g₂ : U) → conj-map a (g₁ · g₂) == ((conj-map a g₁) · (conj-map a g₂))
+      conj-map-is-hom g₁ g₂ =
+        a · ((g₁ · g₂) · (i a)) =⟨ ap (λ ϕ → a · ϕ) (associative g₁ g₂ (i a)) ⟩
+        a · (g₁ · (g₂ · (i a))) =⟨ ap (λ ϕ → a · (g₁ · ϕ)) (! (unit-l ((g₂ · (i a))))) ⟩
+        a · (g₁ · ( e · (g₂ · (i a)))) =⟨ ap (λ ϕ → a · (g₁ · (ϕ · (g₂ · (i a))))) (! (inv-l a)) ⟩
+        a · (g₁ · (((i a) · a ) · (g₂ · (i a)))) =⟨ ap (λ ϕ → a · (g₁ · ϕ) ) (associative (i a) a (g₂ · (i a))) ⟩
+        a · (g₁ · ((i a) ·(a · (g₂ · (i a))))) =⟨ ap (λ ϕ → a · ϕ) (! (associative g₁ ((i a)) ((a · (g₂ · (i a)))))) ⟩
+        a · ((g₁ · (i a)) ·(a · (g₂ · (i a)))) =⟨ ! (associative a ((g₁ · (i a))) ((a · (g₂ · (i a))))) ⟩
+        (a · (g₁ · (i a))) ·(a · (g₂ · (i a))) =∎
+
+      conj-hom : GroupHom G G
+      conj-hom = group-hom (conj-map a) conj-map-is-hom
 
 
-    conj-hom-g-f : (b : U) → (conj-map (i a) (conj-map a b)) == b
-    conj-hom-g-f b =
-      conj-map (i a) (conj-map a b) =⟨ ap (λ ϕ → conj-map (i a) (conj-map ϕ b)) (! (inv-inv-is-unit a)) ⟩
-      conj-map (i a) (conj-map (i (i a)) b) =⟨ funqeq (conj-map-inv (i a)) b ⟩
-      b =∎
+      conj-hom-g-f : (b : U) → (conj-map (i a) (conj-map a b)) == b
+      conj-hom-g-f b =
+        conj-map (i a) (conj-map a b) =⟨ ap (λ ϕ → conj-map (i a) (conj-map ϕ b)) (! (inv-inv-is-unit a)) ⟩
+        conj-map (i a) (conj-map (i (i a)) b) =⟨ funqeq (conj-map-inv (i a)) b ⟩
+        b =∎
 
-    conj-hom-is-equiv : is-equiv (conj-map a)
-    conj-hom-is-equiv = is-eq (conj-map a) (conj-map (i a)) (λ b → funqeq (conj-map-inv a) b) (conj-hom-g-f)
+      conj-hom-is-equiv : is-equiv (conj-map a)
+      conj-hom-is-equiv = is-eq (conj-map a) (conj-map (i a)) (λ b → funqeq (conj-map-inv a) b) (conj-hom-g-f)
 
-    conj-aut : G ≃ᴳ G
-    conj-aut = conj-hom , conj-hom-is-equiv
+  conj-aut : (a : U) → G ≃ᴳ G
+  conj-aut a = conj-hom a , conj-hom-is-equiv a
 
 is-normal' : {G : Group {α}} (H : Subgrp G) → Set (lsucc α)
-is-normal' {G} H = (a : Group.U G) → (lift-iso-over-subgrp {G} {G} (conj-aut a) H) == H
+is-normal' {G} H = (a : Group.U G) → (lift-iso-over-subgrp {G} {G} (ConjAut.conj-aut a) H) == H
+
+module normal-to-normal' {G : Group {α}} {H : Subgrp G} where
+
+  open Group G
+  open Subgrp
+
+  private 
+  
+    conj-subgr : (a : U) → Subgrp G
+    conj-subgr a =  lift-iso-over-subgrp (ConjAut.conj-aut {G} a) H
+
+    {- iso-lift prop composition -}
+    iso-lift-prop-comp : {G' : Group {α}} → (iso : G ≃ᴳ G') → (h : U) → prop H h → prop ((lift-iso-over-subgrp iso) H) ((GroupHom.f (fst iso)) h)
+    iso-lift-prop-comp iso h proph = {!!}
+  
+    {- Subgroup H lifted over the conjugacy automorphism (conj-aut a) contain the g · h · (i g) -}
+    lift-subgr-conj : (a : U) → (h : U) → prop H h → prop (conj-subgr a) (a · (h · (i a)))
+    lift-subgr-conj a u proph = {!!}
+
+    eq-subgrps-have-eq-props : {N : Subgrp G} → (p : N == H) → (prop N == prop H) 
+    eq-subgrps-have-eq-props idp = idp
+  
+    eq-props-elts : {N : Subgrp G} → (p : prop N == prop H) → (a : U) → (prop N a) → (prop H a)
+    eq-props-elts {N = record { prop = prop ; f = f ; id = id ; comp = comp ; inv = inv }} idp a = coe idp
+
+  {- the definitions is-normal and is-normal' should be equivalent. For our purposes it is sufficient to have a map going one way -}
+  is-normal'-to-is-normal : is-normal' H → is-normal H
+  is-normal'-to-is-normal Hnorm' = λ a h x →  eq-props-elts {conj-subgr a} (eq-subgrps-have-eq-props (Hnorm' a)) ((a · (h · (i a)))) (lift-subgr-conj a h x)
+
+
 
 {- We are working towards the following claim: all definable subgroups are normal -}
 def-subgroups-are-normal' : (f : (G : Group {α}) → (Subgrp G)) → (H : Group) → (is-normal' (f H))
-def-subgroups-are-normal' f H =  λ a → lift-aut-retains-subgrp f (conj-aut a)
+def-subgroups-are-normal' f H =  λ a → lift-aut-retains-subgrp f (ConjAut.conj-aut a)
