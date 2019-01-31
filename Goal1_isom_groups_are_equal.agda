@@ -217,62 +217,7 @@ module _ {α : ULevel} where
   isotoid : {G H : Group {α}} (iso : G ≃ᴳ H) → (G == H)
   isotoid = –> iso≃id
 
-  idtoiso' : {G H : Group {α}} → (G == H) → (G ≃ᴳ H)
-  idtoiso' {G} {.G} idp = →ᴳ-id , is-eq (λ z → z) (λ z → z) (λ a → idp) (λ a → idp)
-
-  paths-are-props : {ℓ : ULevel} {X : Set ℓ} {a b : X} → (isSet : is-set X) → is-prop (a == b)
-  paths-are-props {ℓ} {X} {a} {b} isSet = has-level-apply isSet a b
-  module _ {α : ULevel} {G H : Group {α}} where
-
-    {- We give an alternative definition of a group homomorphism -}
-    GroupHom' : {α β : ULevel} (G : Group {α}) (H : Group {β}) → Set (lmax α β)
-    GroupHom' G H = Σ (Group.U G → Group.U H) (λ f → ((g₁ g₂ : Group.U G) → f (Group.comp G g₁ g₂) == Group.comp H (f g₁) (f g₂)))
-
-    {- We prove that the two definitions are equivalent -}
-    GroupHom-equiv-GroupHom' : GroupHom' G H ≃ GroupHom G H
-    GroupHom-equiv-GroupHom' = (λ hom' → group-hom (fst hom') (snd hom')) , record { g = λ hom → (GroupHom.f hom) , (GroupHom.pres-comp hom) ; f-g = λ b → idp ; g-f = λ a → idp ; adj = λ a → idp }
-
-    {- For two homomorphisms of type GroupHom', if their underlying map is equal, than the homomorphisms are equal -}
-    map-determ-hom' : {hom1 hom2 : GroupHom' G H} → (fst hom1 == fst hom2) → (hom1 == hom2)
-    map-determ-hom' {hom1} {hom2} idp = pair= idp (λ= (λ g₁ → λ= λ g₂ → prop-path (paths-are-props (Group.set H)) (snd hom1 g₁ g₂) (snd hom2 g₁ g₂) ))
-
-    module _ where
-      f : GroupHom G H → GroupHom' G H
-      f = λ hom → (GroupHom.f hom) , (GroupHom.pres-comp hom)
-
-      g : GroupHom' G H → GroupHom G H
-      g = λ hom' → group-hom (fst hom') (snd hom')
-
-      f-g : (b : GroupHom' G H) → f(g(b)) == b
-      f-g = λ b → idp
-
-      g-f : (b : GroupHom G H) → g(f(b)) == b
-      g-f = λ b → idp
 
 
-    {- Map determines homomorphism for type GroupHom -}
-    map-determ-hom : {hom1 hom2 : GroupHom G H} → (GroupHom.f hom1 == GroupHom.f hom2) → (hom1 == hom2)
-    map-determ-hom {hom1} {hom2} idp =
-      hom1 =⟨ ! (g-f hom1) ⟩
-      g(f(hom1)) =⟨ ap g (map-determ-hom' idp) ⟩
-      g(f(hom2)) =⟨ g-f hom2 ⟩
-      hom2 =∎
-
-  iso-equiv2 : {G H : Group {α}} → {iso₁ iso₂ : G ≃ᴳ H} → (p : Σ.fst iso₁ == Σ.fst iso₂) → iso₁ == iso₂
-  iso-equiv2 {G} {H} {.(fst iso₂) , snd} {iso₂} idp = pair= idp (prop-path is-equiv-is-prop snd (Σ.snd iso₂))
-
-  iso-equiv : {G H : Group {α}} → {iso₁ iso₂ : G ≃ᴳ H} → (p : GroupHom.f (Σ.fst iso₁) == GroupHom.f (Σ.fst iso₂)) → iso₁ == iso₂
-  iso-equiv p = iso-equiv2 (map-determ-hom p)
-
-
-  test-lemma2 : {G : Group {α}} → GroupHom.f (Σ.fst (idtoiso {G} idp)) == (coe idp)
-  test-lemma2 {G} = ap (λ φ → coe (ap fst (ap (fst magma-equiv) (ap fst φ)))) (!-inv-l ((is-equiv.g-f (is-equiv-inverse (snd Group≃Group')) Σ⟪ G ⟫)))
-
-  idtoiso-equiv : {G H : Group {α}} → idtoiso {G} {H} == idtoiso' {G} {H}
-  idtoiso-equiv {G} {H} = λ= (λ a → lemma a)
-    where
-      lemma : (a : G == H) → idtoiso a == idtoiso' a
-      lemma idp = iso-equiv (test-lemma2 {G})
-
-
-
+  idtoiso-idp-gives-id-map : {G : Group {α}} → GroupHom.f (Σ.fst (idtoiso {G} idp)) == (coe idp)
+  idtoiso-idp-gives-id-map {G} = ap (λ φ → coe (ap fst (ap (fst magma-equiv) (ap fst φ)))) (!-inv-l ((is-equiv.g-f (is-equiv-inverse (snd Group≃Group')) Σ⟪ G ⟫)))

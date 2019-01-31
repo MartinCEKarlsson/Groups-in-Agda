@@ -1,23 +1,77 @@
 {-# OPTIONS --without-K --rewriting #-}
 open import lib.Base
 open import lib.Equivalence
+open import lib.Equivalence2
+open import lib.Univalence
 open import lib.Funext
 open import lib.NType
 open import lib.NType2
 open import lib.Funext
 open import lib.types.Pi
 open import lib.PathGroupoid
+open import Magma-basics
 open import Group-basics
-
+open import Goal1_isom_groups_are_equal
 
 {- In this file we work towards the second goal of the project: definable subgroups are normal in HoTT -}
 
 module Goal2_definable_subgr_normal {α : ULevel} where
 
-{- We now use another way of finding a map from Subgrp G to Subgrp H using the identity -}
-{- firstly, we define the map idtoiso which takes an equality to an isomorphism in the trivial way -}
-idtoiso : {G H : Group {α}} → (G == H) → (G ≃ᴳ H)
-idtoiso {G} {.G} idp = →ᴳ-id , is-eq (λ z → z) (λ z → z) (λ a → idp) (λ a → idp)
+
+module _ where
+
+  idtoiso' : {G H : Group {α}} → (G == H) → (G ≃ᴳ H)
+  idtoiso' {G} {.G} idp = →ᴳ-id , is-eq (λ z → z) (λ z → z) (λ a → idp) (λ a → idp)
+
+  paths-are-props : {ℓ : ULevel} {X : Set ℓ} {a b : X} → (isSet : is-set X) → is-prop (a == b)
+  paths-are-props {ℓ} {X} {a} {b} isSet = has-level-apply isSet a b
+  module _ {α : ULevel} {G H : Group {α}} where
+
+    {- We give an alternative definition of a group homomorphism -}
+    GroupHom' : {α β : ULevel} (G : Group {α}) (H : Group {β}) → Set (lmax α β)
+    GroupHom' G H = Σ (Group.U G → Group.U H) (λ f → ((g₁ g₂ : Group.U G) → f (Group.comp G g₁ g₂) == Group.comp H (f g₁) (f g₂)))
+
+    {- We prove that the two definitions are equivalent -}
+    GroupHom-equiv-GroupHom' : GroupHom G H ≃ GroupHom' G H
+    GroupHom-equiv-GroupHom' = ((λ hom → (GroupHom.f hom) , (GroupHom.pres-comp hom)) , record { g =  (λ hom' → group-hom (fst hom') (snd hom')) ; f-g = λ b → idp ; g-f = λ a → idp ; adj = λ a → idp })
+
+    {- For two homomorphisms of type GroupHom', if their underlying map is equal, than the homomorphisms are equal -}
+    map-determ-hom' : {hom1 hom2 : GroupHom' G H} → (fst hom1 == fst hom2) → (hom1 == hom2)
+    map-determ-hom' {hom1} {hom2} idp = pair= idp (λ= (λ g₁ → λ= λ g₂ → prop-path (paths-are-props (Group.set H)) (snd hom1 g₁ g₂) (snd hom2 g₁ g₂) ))
+
+    {- Map determines homomorphism for type GroupHom -}
+    map-determ-hom : {hom1 hom2 : GroupHom G H} → (GroupHom.f hom1 == GroupHom.f hom2) → (hom1 == hom2)
+    map-determ-hom {hom1} {hom2} idp = path
+      where
+        open is-equiv (Σ.snd GroupHom-equiv-GroupHom')
+
+        f : (GroupHom G H → GroupHom' G H )
+        f = Σ.fst GroupHom-equiv-GroupHom'
+
+
+        path : (hom1 == hom2)
+        path =
+          hom1 =⟨ ! (g-f hom1) ⟩
+          g(f(hom1)) =⟨ ap g (map-determ-hom' idp) ⟩
+          g(f(hom2)) =⟨ g-f hom2 ⟩
+          hom2 =∎
+
+  iso-equiv2 : {G H : Group {α}} → {iso₁ iso₂ : G ≃ᴳ H} → (p : Σ.fst iso₁ == Σ.fst iso₂) → iso₁ == iso₂
+  iso-equiv2 {G} {H} {.(fst iso₂) , snd} {iso₂} idp = pair= idp (prop-path is-equiv-is-prop snd (Σ.snd iso₂))
+
+  iso-equiv : {G H : Group {α}} → {iso₁ iso₂ : G ≃ᴳ H} → (p : GroupHom.f (Σ.fst iso₁) == GroupHom.f (Σ.fst iso₂)) → iso₁ == iso₂
+  iso-equiv p = iso-equiv2 (map-determ-hom p)
+
+
+
+  idtoiso-equiv : {G H : Group {α}} → idtoiso {α} {G} {H} == idtoiso' {G} {H}
+  idtoiso-equiv {G} {H} = λ= (λ a → lemma a)
+    where
+      lemma : (a : G == H) → idtoiso a == idtoiso' a
+      lemma idp = iso-equiv (idtoiso-idp-gives-id-map {α} {G})
+
+  idtoiso-idp-equiv : {G : Group {α}} →  idtoiso idp == idtoiso' idp
+  idtoiso-idp-equiv {G} = iso-equiv (idtoiso-idp-gives-id-map {α} {G})
 
 
 {- In this module, we define a function that given an isomorphism between G and H and a subgroup
@@ -51,11 +105,8 @@ module _ {G : Group} {H : Group} where
       hom = _≃ᴳ_.g-hom iso
 
 
-postulate
-  isotoid : {G H : Group {α}} (iso : G ≃ᴳ H) → G == H
   iso-id-equiv : {G H : Group {α}} (iso : G ≃ᴳ H) → (idtoiso (isotoid iso)) == iso
-  --some-lemma : {G H : Group} (f : (I : Group) → (Subgrp I)) (iso : H ≃ᴳ G) → ((map-lift (Σ.fst iso) (f G)) == f H)
-
+  iso-id-equiv {G} {H} iso = is-equiv.g-f (snd (iso≃id {α} {G} {H})) iso 
 
 funqeq : {β : ULevel} {A B : Set β} {f g : A → B} (p : f == g) (a : A) → (f a == g a)
 funqeq idp a = idp
@@ -150,11 +201,15 @@ module _  (f : (G : Group {α}) → (Subgrp G)) where
 
   private
     lift-aut-lemma1 : {G H : Group} (p : G == H) → (lift-iso-over-subgrp (idtoiso p)) == (transport Subgrp  p)
-    lift-aut-lemma1 idp = λ= (λ g → subgrp-eq idp)
+    lift-aut-lemma1 {G} {H} idp =
+      lift-iso-over-subgrp (idtoiso idp) =⟨ ap lift-iso-over-subgrp idtoiso-idp-equiv ⟩
+      lift-iso-over-subgrp (idtoiso' idp) =⟨ λ= (λ g → subgrp-eq idp) ⟩
+      transport Subgrp idp =∎
+
 
     lift-aut-lemma2 : {G : Group} (aut : G ≃ᴳ G) → lift-iso-over-subgrp aut == transport Subgrp (isotoid aut)
-    lift-aut-lemma2 aut =
-        lift-iso-over-subgrp aut =⟨ ap lift-iso-over-subgrp (! (iso-id-equiv aut)) ⟩
+    lift-aut-lemma2 {G} aut =
+        lift-iso-over-subgrp aut =⟨ ap lift-iso-over-subgrp (! (iso-id-equiv {G} {G} aut)) ⟩
         lift-iso-over-subgrp (idtoiso (isotoid aut)) =⟨ lift-aut-lemma1 ((isotoid aut)) ⟩
         transport Subgrp (isotoid aut) =∎
 
@@ -163,7 +218,6 @@ module _  (f : (G : Group {α}) → (Subgrp G)) where
 
 
 
-
 {- We are working towards the following claim: all definable subgroups are normal -}
-def-subgroups-are-normal : (f : (G : Group {α}) → (Subgrp G)) → (H : Group) → (is-normal (f H))
-def-subgroups-are-normal f H g h hprop = {!   !}
+--def-subgroups-are-normal : (f : (G : Group {α}) → (Subgrp G)) → (H : Group) → (is-normal (f H))
+--def-subgroups-are-normal f H g h hprop = {!   !}
