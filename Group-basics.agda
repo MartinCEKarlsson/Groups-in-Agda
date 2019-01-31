@@ -103,9 +103,6 @@ module _ {α : ULevel} where
         e
       =∎
 
-    postulate
-      inv-inv-is-unit : (a : U) → (i (i a)) == a
-
     unit-r : (a : U) → (a · e) == a
     unit-r a =
         a · e
@@ -150,6 +147,16 @@ module _ {α : ULevel} where
     {- Group computation is a congruence -}
     comp-is-congr : ∀ a b x y → (a == b) → (x == y) → ((a · x) == (b · y))
     comp-is-congr a .a x .x idp idp = idp
+
+    {- the inverse of the inverse is the element itself -}
+    inv-inv-is-unit : ∀ a → (i (i a)) == a
+    inv-inv-is-unit a = 
+      i (i a) =⟨ ! (unit-l (i (i a))) ⟩
+      e · (i (i a)) =⟨ ap (λ x → x · (i (i a))) (! (inv-r a)) ⟩
+      (a · (i a)) · (i (i a)) =⟨ associative a (i a) (i (i a)) ⟩
+      a · ( (i a) · (i (i a)) ) =⟨ ap (λ x → a · x) (inv-r (i a)) ⟩
+      a · e =⟨ unit-r a ⟩
+      a =∎
 
   record Subgrp (G : Group) : Set (lsucc α) where
     private
