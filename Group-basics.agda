@@ -8,8 +8,10 @@ open import lib.NType
 open import lib.types.Sigma
 
 {- This file draws heavily from the HOTT-library -}
-{- In this file we have the basic definitions of groups, subgroups, normal subgroups, and group homomorphisms + basic lemma's -}
-{- PLEASE ONLY PUSH THIS FILE IF IT LOADS WITHOUT OPEN GOALS, OTHERWISE THE OTHER FILES WILL NOT LOAD -}
+{- In this file we have the basic definitions of groups, subgroups,
+   normal subgroups, and group homomorphisms + basic lemma's -}
+{- PLEASE ONLY PUSH THIS FILE IF IT LOADS WITHOUT OPEN GOALS,
+   OTHERWISE THE OTHER FILES WILL NOT LOAD -}
 
 module Group-basics where
 {- A group G is an algebra hG; ·; −1; 1i with a binary, a unary, and
@@ -46,7 +48,8 @@ module _ {α : ULevel} where
     has-inverse-l : {X : Type α} (_⋆_ : X → X → X) (e : X) → Type α
     has-inverse-l {X} _⋆_ e = Σ (X → X) (is-inverse-l _⋆_ e)
 
-    {- We define when a Magma is a group. We use sigma types instead of a record type for more compatibility with the library  -}
+    {- We define when a Magma is a group. We use sigma types instead of a record type 
+       for more compatibility with the library  -}
     is-group : Magma → Type α
     is-group M =  is-associative (Magma._∗_ M) × is-set (Magma.X M)
                × (Σ (has-unit-l (Magma._∗_ M))
@@ -59,7 +62,8 @@ module _ {α : ULevel} where
       M : Magma
       is-group : Properties.is-group M
 
-    {- For convenience we extract all the useful fields of a group, so that we don't have to extract them every time from the sigma types -}
+    {- For convenience we extract all the useful fields of a group, so that we don't 
+       have to extract them every time from the sigma types -}
     U : Type α
     U = Magma.X M
 
@@ -204,7 +208,8 @@ module _ {α : ULevel} where
     prop-equality : ∀ a b → (a == b) → prop a → prop b
     prop-equality a .a idp aprop = aprop
 
-  {- Definition of normal subgroups. A dependent type, depending on a group G (implicit) and a subgroup H of type Subgrp G -}
+  {- Definition of normal subgroups. A dependent type, depending on a group G (implicit) 
+     and a subgroup H of type Subgrp G -}
   {- We use the most common definition : ∀ g ∈ G, ∀ h ∈ H : g · h · (i g) ∈ H -}
   is-normal : {G : Group} → (Subgrp G) → Set α
   is-normal {G} H = (g : U) → (h : U) → prop h → prop (g ·ᴳ (h ·ᴳ (iᴳ g)))
@@ -293,7 +298,8 @@ _→ᴳ_ = GroupHom
 →ᴳ-trans (group-hom g p) (group-hom h q) =
   group-hom (λ z → h (g z)) (λ a b → (ap h (p a b)) ∙ (q (g a) (g b)))
 
-{- definition of isomorphism G ≃ᴳ H: a homomorphism G →ᴳ H + a proof that the underlying map is an equivalence, so we have a bijection -}
+{- definition of isomorphism G ≃ᴳ H: a homomorphism G →ᴳ H + a proof that the 
+   underlying map is an equivalence, so we have a bijection -}
 _≃ᴳ_ : {α β : ULevel} (G : Group {α}) (H : Group {β}) → Set (lmax α β)
 G ≃ᴳ H = Σ (G →ᴳ H) (λ φ → is-equiv (GroupHom.f φ))
 infix 100 _≃ᴳ_
