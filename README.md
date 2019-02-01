@@ -19,3 +19,12 @@ The project is structured in the following files:
 ### Goal 1: isomorphic groups are equal 
 
 ### Goal 2: definable subgroups are normal
+One definition of normal subgroups is in terms of inner automorphisms (conjugation maps), namely that every inner automorphism maps the subgroup onto itself. We prove a more general result: that every definable subgroup is closed under any automorphism. 
+
+For this, we make use of the result proven in Goal 1 that there exists an equivalence between isomorphisms and equality of groups. Because of this, we only need to show that definable subgroups are closed under the automorphism generated from the identity path.
+
+To prove this, we need a few supporting results. First of all, we characterize the equality of subgroups. We show propositional extensionality: two subgroups are equal iff their propositions are equal. Secondly, we need to show that the map idtoiso (which transforms an equality into an isomorphism) from Goal 1 actually does this in the trivial way, i.e. with an identity map. Combining these results, we can show that every definable subgroup is indeed closed under any automorphism.
+
+Subsequently, we define inner automorphisms, so we can apply the previous result to inner automorphisms and derive normality of definable subgroups in the above sense. Moreover, we prove that this definition of normality implies the common definition of normality, which then completes the proof.
+
+Finally, we apply the main result to the example of the center of a group, showing that the center of a group is always a normal subgroup. This main result also allows us to prove the normality of other definable subgroups, such as the centralizer.
