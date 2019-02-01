@@ -486,3 +486,20 @@ center G = record { prop = λ g → in-center g ; f = in-center-is-prop ; id = u
 -}
 center-is-normal : {G : Group {α}} → is-normal (center G)
 center-is-normal {G} = def-subgroups-are-normal center G
+
+{- For contrast, we can also give a direct proof of the fact that the center is a normal subgroup -}
+center-is-normal' : {G : Group {α}} → is-normal (center G)
+center-is-normal' {G} = λ g h proph → λ a → 
+ a · (g · (h · (i g))) =⟨ ap (λ φ → a · (g · φ)) (! (proph (i g))) ⟩
+ a · (g · ((i g) · h)) =⟨ ap (λ φ → a · φ) (! (associative g (i g) h))  ⟩
+ a · ((g · (i g)) · h) =⟨ ap (λ φ → a · (φ · h)) (inv-r g) ⟩
+ a · (e · h) =⟨ ap (λ φ → a · φ) (unit-l h) ⟩
+ a · h =⟨ proph a ⟩
+ h · a =⟨ ! (unit-l (h · a)) ⟩
+ e · (h · a) =⟨ ap (λ φ → φ · (h · a)) (! (inv-r g)) ⟩
+ (g · (i g)) · (h · a) =⟨ ! (associative (g · (i g)) h a) ⟩
+ ((g · (i g)) · h) · a =⟨ ap (λ φ → φ · a) (associative g (i g) h) ⟩
+ (g · ((i g) · h)) · a =⟨ ap (λ φ → (g · φ) · a) (proph (i g)) ⟩
+ (g · (h · (i g))) · a =∎
+    where
+      open Group G
