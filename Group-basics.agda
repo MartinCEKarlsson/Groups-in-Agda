@@ -48,7 +48,7 @@ module _ {α : ULevel} where
     has-inverse-l : {X : Type α} (_⋆_ : X → X → X) (e : X) → Type α
     has-inverse-l {X} _⋆_ e = Σ (X → X) (is-inverse-l _⋆_ e)
 
-    {- We define when a Magma is a group. We use sigma types instead of a record type 
+    {- We define when a Magma is a group. We use sigma types instead of a record type
        for more compatibility with the library  -}
     is-group : Magma → Type α
     is-group M =  is-associative (Magma._∗_ M) × is-set (Magma.X M)
@@ -62,7 +62,7 @@ module _ {α : ULevel} where
       M : Magma
       is-group : Properties.is-group M
 
-    {- For convenience we extract all the useful fields of a group, so that we don't 
+    {- For convenience we extract all the useful fields of a group, so that we don't
        have to extract them every time from the sigma types -}
     U : Type α
     U = Magma.X M
@@ -168,7 +168,7 @@ module _ {α : ULevel} where
 
     {- the inverse of the inverse is the element itself -}
     inv-inv-is-unit : ∀ a → (i (i a)) == a
-    inv-inv-is-unit a = 
+    inv-inv-is-unit a =
       i (i a) =⟨ ! (unit-l (i (i a))) ⟩
       e · (i (i a)) =⟨ ap (λ x → x · (i (i a))) (! (inv-r a)) ⟩
       (a · (i a)) · (i (i a)) =⟨ associative a (i a) (i (i a)) ⟩
@@ -185,7 +185,7 @@ module _ {α : ULevel} where
     inv-of-comp a b = inv-is-unique (a · b) ((i b) · (i a)) path
       where
         path : ((a · b) · (i b · i a)) == e
-        path = 
+        path =
           (a · b) · (i b · i a) =⟨ ! (associative (a · b) (i b) (i a)) ⟩
           ((a · b) · i b) · (i a) =⟨ ap (λ φ → φ · (i a)) (associative a b (i b)) ⟩
           (a · (b · i b)) · (i a) =⟨ ap (λ φ → (a · φ) · (i a)) (inv-r b) ⟩
@@ -193,12 +193,21 @@ module _ {α : ULevel} where
           a · (i a) =⟨ inv-r a ⟩
           e =∎
 
+    {- The inverse of the unit is again the unit. -}
+    unit-is-inv-unit : e == i e
+    unit-is-inv-unit = e
+      =⟨ ! (inv-l e) ⟩
+        (i e) · e
+      =⟨ unit-r (i e) ⟩
+        i e
+      =∎
+
   {- We define the type subgroup, it is a dependent type, depending on the group G -}
   record Subgrp (G : Group) : Set (lsucc α) where
     private
       module G = Group G
     field
-      prop : G.U → Set α --the function selects the elements in the subgroup, as general as possible 
+      prop : G.U → Set α --the function selects the elements in the subgroup, as general as possible
       f : ∀ {a : G.U} → is-prop( prop a) -- the selection function has to map to a proposition
       id : prop G.e -- unit has to be in the subgroup
       comp : ∀ {a b : G.U} → prop a → prop b → prop (G.comp a b) --subgroup closed under group product
@@ -208,7 +217,7 @@ module _ {α : ULevel} where
     prop-equality : ∀ a b → (a == b) → prop a → prop b
     prop-equality a .a idp aprop = aprop
 
-  {- Definition of normal subgroups. A dependent type, depending on a group G (implicit) 
+  {- Definition of normal subgroups. A dependent type, depending on a group G (implicit)
      and a subgroup H of type Subgrp G -}
   {- We use the most common definition : ∀ g ∈ G, ∀ h ∈ H : g · h · (i g) ∈ H -}
   is-normal : {G : Group} → (Subgrp G) → Set α
@@ -228,7 +237,7 @@ record GroupHom {α β : ULevel} (G : Group {α}) (H : Group {β}) : Set (lmax �
 
   field
     f : G.U → H.U --underlying map of the homomorphism
-    pres-comp : ∀ g₁ g₂ → f (G.comp g₁ g₂) == H.comp (f g₁) (f g₂) --condition that it preserves the group structure 
+    pres-comp : ∀ g₁ g₂ → f (G.comp g₁ g₂) == H.comp (f g₁) (f g₂) --condition that it preserves the group structure
 
   private
     {- a homomorphism respects group product and inverses -}
@@ -298,7 +307,7 @@ _→ᴳ_ = GroupHom
 →ᴳ-trans (group-hom g p) (group-hom h q) =
   group-hom (λ z → h (g z)) (λ a b → (ap h (p a b)) ∙ (q (g a) (g b)))
 
-{- definition of isomorphism G ≃ᴳ H: a homomorphism G →ᴳ H + a proof that the 
+{- definition of isomorphism G ≃ᴳ H: a homomorphism G →ᴳ H + a proof that the
    underlying map is an equivalence, so we have a bijection -}
 _≃ᴳ_ : {α β : ULevel} (G : Group {α}) (H : Group {β}) → Set (lmax α β)
 G ≃ᴳ H = Σ (G →ᴳ H) (λ φ → is-equiv (GroupHom.f φ))

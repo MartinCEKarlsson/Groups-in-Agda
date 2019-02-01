@@ -15,11 +15,16 @@ The project is structured in the following files:
    In this file, we prove the goal that isomorphic groups are equal.
 * `Goal2_definable_subgr_normal.agda`\
    In this file, we prove the goal that definable subgroups are normal.
+* `Generated_groups.agda`\
+   This file contains the definition of generated groups.
 
-### Goal 1: isomorphic groups are equal 
+### Goal 1: isomorphic groups are equal
+Given two groups *G* and *H*, we want to show that there is an equivalence between an isomorphism from `G` to `H` and the identity `G` = `H`. Such a proof depends heavily on the notions of groups and isomorphisms. Thus, we define these types in a convenient way. A group is essentially defined as a Sigma type `(Magma, m -> is-group m)`, where `is-group m` is a proof that `m` fulfils the properties of a group. Isomorphisms are defined in the obvious way: homomorphisms that are equivalences.
+
+Our proof follows are very direct approach. Namely, we show that our notion of isomorphisms is equivalent to equivalence of the underlying magmas. Using univalence we can then show that the magmas must be identical. Then we show that this identity implies that the `is-group`s must be equivalent. This follows from a more general result. Namely, for any magma `m`, `is-group m` is a proposition.
 
 ### Goal 2: definable subgroups are normal
-One definition of normal subgroups is in terms of inner automorphisms (conjugation maps), namely that every inner automorphism maps the subgroup onto itself. We prove a more general result: that every definable subgroup is closed under any automorphism. 
+One definition of normal subgroups is in terms of inner automorphisms (conjugation maps), namely that every inner automorphism maps the subgroup onto itself. We prove a more general result: that every definable subgroup is closed under any automorphism.
 
 For this, we make use of the result proven in Goal 1 that there exists an equivalence between isomorphisms and equality of groups. Because of this, we only need to show that definable subgroups are closed under the automorphism generated from the identity path.
 

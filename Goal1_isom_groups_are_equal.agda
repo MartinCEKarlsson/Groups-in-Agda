@@ -33,16 +33,24 @@ open Group-basics.Properties
 module _ {α : ULevel} {M : Magma {α}} where
   open Magma M
 
-  {- We want the proofs that a Magma is a group to be propositions. -}
+  {- Fist we proof that the proofs that a specific Magma is a group are
+     propositions.
+  -}
+
+  {- This boils down to showing that for all pairs of is-group M there is a
+     path between them.
+  -}
   is-group-all-paths : (x y : is-group M) → (x == y)
   is-group-all-paths (isAssoc , isSet , (e , isUnit) , inv , isInv)
         (isAssoc' , isSet' , (e' , isUnit') , inv' , isInv')
-        =   pair×= isAssoc= (pair×= isSet= (pair= unit= ↓-inv=))
+        =   pair×= isAssoc= (pair×= isSet= (pair= unit= inv=))
     where
       module G = Group (group M (isAssoc , isSet , (e , isUnit) , inv , isInv))
       module H = Group (group M (isAssoc' , isSet' , (e' , isUnit') , inv'
                                                                     , isInv'))
-
+      {- Essentially, we need to show that all properties are equal under
+         the assumption that the underlying Magma is equal. Most equalities
+         follow trivially.  -}
       paths-are-props : {a b : X} → is-prop (a == b)
       paths-are-props {a} {b} = has-level-apply isSet a b
 
@@ -73,40 +81,54 @@ module _ {α : ULevel} {M : Magma {α}} where
       unit= : (e , isUnit) == (e' , isUnit')
       unit= = pair= e= isUnit=
 
-      inv= : inv == inv'
-      inv= = λ= (λ x →
-          inv x
-        =⟨ ! (H.unit-r (inv x)) ⟩
-          (inv x) ∗ e'
-        =⟨ ap (λ φ → (inv x) ∗ φ) (! (H.inv-r x)) ⟩
-          (inv x) ∗ (x ∗ (inv' x))
-        =⟨ ! (G.associative (inv x) x (inv' x)) ⟩
-          ((inv x) ∗ x) ∗ (inv' x)
-        =⟨ ap (λ φ → (φ ∗ inv' x)) (G.inv-l x) ⟩
-          e ∗ inv' x
-        =⟨ G.unit-l (inv' x) ⟩
-          inv' x
-        =∎)
-
-      ↓-inv= : (inv , isInv) == (inv' , isInv')
+      {- The inverse equality is trickier because it depends on the unit. In
+         essence we need to transport the identies given the unit equality.
+      -}
+      inv= : (inv , isInv) == (inv' , isInv')
                             [ (λ { (x , isU) → has-inverse-l _∗_ x}) ↓ unit= ]
-      ↓-inv= = from-transp (λ x → has-inverse-l _∗_ (fst x)) unit= (inv,isInv= {unit=})
+      inv= = from-transp (λ x → has-inverse-l _∗_ (fst x)) unit= (inv,isInv= {unit=})
         where
-          tpinv : (p : e , isUnit == e' , isUnit') → has-inverse-l _∗_ e'
-          tpinv p = transport (λ x → has-inverse-l _∗_ (fst x)) p (inv , isInv)
-
-          inv1= : (p : e , isUnit == e' , isUnit') → fst (tpinv p) == inv'
-          inv1= idp = λ= (λ x →
+          {- First, We show that the inverse functions must actually be
+            identical.
+          -}
+          inv=inv' : inv == inv'
+          inv=inv' = λ= (λ x →
               inv x
-            =⟨ ap (λ f → f x) inv= ⟩
+            =⟨ ! (H.unit-r (inv x)) ⟩
+              (inv x) ∗ e'
+            =⟨ ap (λ φ → (inv x) ∗ φ) (! (H.inv-r x)) ⟩
+              (inv x) ∗ (x ∗ (inv' x))
+            =⟨ ! (G.associative (inv x) x (inv' x)) ⟩
+              ((inv x) ∗ x) ∗ (inv' x)
+            =⟨ ap (λ φ → (φ ∗ inv' x)) (G.inv-l x) ⟩
+              e ∗ inv' x
+            =⟨ G.unit-l (inv' x) ⟩
               inv' x
             =∎)
 
+          {- We define a more convenient type for the transported inverse,
+             because we will need to argue about it a lot. -}
+          tpinv : (p : e , isUnit == e' , isUnit') → has-inverse-l _∗_ e'
+          tpinv p = transport (λ x → has-inverse-l _∗_ (fst x)) p (inv , isInv)
+
+          {- Now we show that the inverse functions must be equal after the
+             transport.
+          -}
+          inv1= : (p : e , isUnit == e' , isUnit') → fst (tpinv p) == inv'
+          inv1= idp = λ= (λ x →
+              inv x
+            =⟨ ap (λ f → f x) inv=inv' ⟩
+              inv' x
+            =∎)
+
+          {- For the proof of the inverses we show that they are propositions.
+          -}
           is-inverse-l-is-prop : {inv : X → X} {e : X}
                                → is-prop (is-inverse-l _∗_ e inv)
           is-inverse-l-is-prop {inv} {e} = all-paths-is-prop (λ f g →
             λ= (λ x → prop-path paths-are-props (f x) (g x)))
 
+          {- Then we can easily show that the isInv must be equal. -}
           inv2= : (p : e , isUnit == e' , isUnit') → snd {α} (tpinv p) == isInv'
                                   [ (λ x → is-inverse-l _∗_ e' x) ↓ inv1= p ]
           inv2= idp = from-transp (λ x → is-inverse-l _∗_ e' x) (inv1= idp)
@@ -119,12 +141,14 @@ module _ {α : ULevel} {M : Magma {α}} where
                      → (tpinv p) == (inv' , isInv')
           inv,isInv= {p} = pair= (inv1= p) (inv2= p)
 
+  {- Thus, we can derive that is-groups are propositions. -}
   is-group-is-prop : is-prop (is-group M)
   is-group-is-prop = all-paths-is-prop is-group-all-paths
 
+{- In this module we show the equivalence of isomorphisms and idenities. -}
 module _ {α : ULevel} where
+  {- We create a simple Sigma type based on our definition of Groups. -}
   private
-
     Group' : Type (lsucc α)
     Group' = Σ Magma (λ X → (is-group X))
 
@@ -134,6 +158,7 @@ module _ {α : ULevel} where
     -Σ⟪_⟫ : Group' → Group
     -Σ⟪ M , is-group ⟫ = group M is-group
 
+    {- It follows trivially that the two types are equivalent. -}
     Group≃Group' : Group {α} ≃ Group'
     Group≃Group' = equiv f g f-g g-f
       where
@@ -144,31 +169,30 @@ module _ {α : ULevel} where
         g G = -Σ⟪ G ⟫
 
         f-g : (G : Group') → (f (g G) == G)
-        f-g (fst₁ , snd₁) = idp
+        f-g G = idp
 
         g-f : (G : Group) → (g (f G) == G)
         g-f M = idp
 
-    {- We define a notion of group' equivalence. -}
+    {- We define a notion of group' equivalence. As we have seen before, the
+       equality of group properties follows if the Magma's are equal. Hence,
+       all we actually need is magma equivalence. -}
     group'= : (G H : Group') → Type α
     group'= G H = magma= (fst G) (fst H)
 
-    {- This notion should be equivalent to isomorphism. -}
+    {- Now we show that this notion is equivalent to isomorphism. -}
     iso≃group'= : (G H : Group) → (G ≃ᴳ H) ≃ (group'= Σ⟪ G ⟫ Σ⟪ H ⟫)
     iso≃group'= G H = equiv f g f-g g-f
       where
-
-        X≃ : G ≃ᴳ H → (Magma.X (fst Σ⟪ G ⟫) ≃ Magma.X (fst Σ⟪ H ⟫))
-        X≃ iso = GroupHom.f (fst iso) , snd iso
-
         f : G ≃ᴳ H → group'= Σ⟪ G ⟫ Σ⟪ H ⟫
-        f x = record { carrier-equiv = X≃ x
+        f x = record { carrier-equiv = GroupHom.f (fst x) , snd x
                      ; preserves-operator = GroupHom.pres-comp (fst x) }
 
         g : group'= Σ⟪ G ⟫ Σ⟪ H ⟫ → G ≃ᴳ H
         g record { carrier-equiv = carrier-equiv
                  ; preserves-operator = preserves-operator }
-               = (group-hom (–> carrier-equiv) preserves-operator) , snd carrier-equiv
+             = (group-hom (–> carrier-equiv) preserves-operator) ,
+               snd carrier-equiv
 
         f-g : (x : group'= Σ⟪ G ⟫ Σ⟪ H ⟫) → f (g x) == x
         f-g x = idp
@@ -176,6 +200,8 @@ module _ {α : ULevel} where
         g-f : (x : G ≃ᴳ H) → g (f x) == x
         g-f x = idp
 
+  {- Next we show that magma identity is equivalent to group' identity. We can
+     derive this from the fact that is-group is a proposition. -}
   magma-id≃group'-id : {G H : Group {α}} → (Group.M G == Group.M H) ≃ (Σ⟪ G ⟫ == Σ⟪ H ⟫)
   magma-id≃group'-id {G} {H} = equiv f g f-g g-f
     where
@@ -196,8 +222,8 @@ module _ {α : ULevel} where
       g-f {group M x} {group .M y} idp = fst=-β idp (from-transp is-group idp
         (prop-path (has-level-in (has-level-apply is-group-is-prop)) x y))
 
-  {- Now we want to show that isomorphisms are equivalent to equalities between
-     groups. -}
+  {- Now we can show that isomorphisms are equivalent to equalities between
+     groups.-}
   iso≃id : {G H : Group {α}} → (G ≃ᴳ H) ≃ (G == H)
   iso≃id {G} {H} =
       G ≃ᴳ H
@@ -211,13 +237,17 @@ module _ {α : ULevel} where
       G == H
     ≃∎
 
+  {- Then we get define the maps between group idenities and isomorphisms. -}
   idtoiso : {G H : Group {α}} → (G == H) → (G ≃ᴳ H)
   idtoiso = <– iso≃id
 
   isotoid : {G H : Group {α}} (iso : G ≃ᴳ H) → (G == H)
   isotoid = –> iso≃id
 
-
-
-  idtoiso-idp-gives-id-map : {G : Group {α}} → GroupHom.f (Σ.fst (idtoiso {G} idp)) == (coe idp)
-  idtoiso-idp-gives-id-map {G} = ap (λ φ → coe (ap fst (ap (fst magma-equiv) (ap fst φ)))) (!-inv-l ((is-equiv.g-f (is-equiv-inverse (snd Group≃Group')) Σ⟪ G ⟫)))
+  {- This shows that the function of a underlying homomorphism of idtoiso of
+     the identity path is the same as coe of idp. -}
+  idtoiso-idp-gives-id-map : {G : Group {α}}
+                           → GroupHom.f (fst (idtoiso {G} idp)) == (coe idp)
+  idtoiso-idp-gives-id-map {G} =
+     ap (λ φ → coe (ap fst (ap (fst magma-equiv) (ap fst φ))))
+        (!-inv-l ((is-equiv.g-f (is-equiv-inverse (snd Group≃Group')) Σ⟪ G ⟫)))
