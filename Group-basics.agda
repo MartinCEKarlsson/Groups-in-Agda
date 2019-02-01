@@ -226,7 +226,9 @@ module _ {α : ULevel} where
       open Group G renaming (comp to _·ᴳ_; i to iᴳ)
       open Subgrp H renaming (comp to _·ᴴ_)
 
-{- Definition of the type group homomorphism G →ᴳ H, a dependent type, depending on two groups G and H -}
+{- Definition of the type group homomorphism G →ᴳ H, a dependent type, depending on two groups G
+   and H
+-}
 record GroupHom {α β : ULevel} (G : Group {α}) (H : Group {β}) : Set (lmax α β) where
   constructor group-hom
   private
@@ -237,7 +239,8 @@ record GroupHom {α β : ULevel} (G : Group {α}) (H : Group {β}) : Set (lmax �
 
   field
     f : G.U → H.U --underlying map of the homomorphism
-    pres-comp : ∀ g₁ g₂ → f (G.comp g₁ g₂) == H.comp (f g₁) (f g₂) --condition that it preserves the group structure
+    pres-comp : ∀ g₁ g₂ → f (G.comp g₁ g₂) == H.comp (f g₁) (f g₂)
+      --condition that it preserves the group structure
 
   private
     {- a homomorphism respects group product and inverses -}
@@ -303,7 +306,8 @@ _→ᴳ_ = GroupHom
 →ᴳ-id = group-hom (λ x → x) (λ g₁ g₂ → idp)
 
 {- composition of two homomorphisms is again a homomorphism -}
-→ᴳ-trans : {α β γ : ULevel} {G : Group {α}} {H : Group {β}} {J : Group {γ}} → (G →ᴳ H) → (H →ᴳ J) → (G →ᴳ J)
+→ᴳ-trans : {α β γ : ULevel} {G : Group {α}} {H : Group {β}} {J : Group {γ}} → (G →ᴳ H) → (H →ᴳ J)
+         → (G →ᴳ J)
 →ᴳ-trans (group-hom g p) (group-hom h q) =
   group-hom (λ z → h (g z)) (λ a b → (ap h (p a b)) ∙ (q (g a) (g b)))
 

@@ -13,7 +13,9 @@ open import Magma-basics
 open import Group-basics
 open import Goal1_isom_groups_are_equal
 
-{- In this file we work towards the second goal of the project: definable subgroups are normal in HoTT -}
+{- In this file we work towards the second goal of the project: definable subgroups are normal in
+   HoTT
+-}
 
 module Goal2_definable_subgr_normal {α : ULevel} where
 
@@ -30,26 +32,36 @@ module _ where
   paths-are-props : {ℓ : ULevel} {X : Set ℓ} {a b : X} → (isSet : is-set X) → is-prop (a == b)
   paths-are-props {ℓ} {X} {a} {b} isSet = has-level-apply isSet a b
 
-  {- We need a convenient way to show that two isomorphisms are equal. For this, we first characterize
-     when two homomorphisms are equal. We prove that a homomorphism is completely determined by its map.
-     Secondly, we use this to prove that two isomorphisms are equal when the underlying map of the
-     homomorphism is equal-}
+  {- We need a convenient way to show that two isomorphisms are equal. For this, we first
+     characterize when two homomorphisms are equal. We prove that a homomorphism is completely
+     determined by its map. Secondly, we use this to prove that two isomorphisms are equal when the
+     underlying map of the homomorphism is equal
+  -}
   module _ {α : ULevel} {G H : Group {α}} where
 
     {- We give an alternative definition of a group homomorphism -}
     GroupHom' : {α β : ULevel} (G : Group {α}) (H : Group {β}) → Set (lmax α β)
-    GroupHom' G H = Σ (Group.U G → Group.U H) (λ f → ((g₁ g₂ : Group.U G) → f (Group.comp G g₁ g₂) == Group.comp H (f g₁) (f g₂)))
+    GroupHom' G H =
+      Σ (Group.U G → Group.U H)
+        (λ f → ((g₁ g₂ : Group.U G) → f (Group.comp G g₁ g₂) == Group.comp H (f g₁) (f g₂)))
 
     {- We prove that the two definitions are equivalent -}
     GroupHom-equiv-GroupHom' : GroupHom G H ≃ GroupHom' G H
-    GroupHom-equiv-GroupHom' = ((λ hom → (GroupHom.f hom) , (GroupHom.pres-comp hom)) , record { g =  (λ hom' → group-hom (fst hom') (snd hom')) ; f-g = λ b → idp ; g-f = λ a → idp ; adj = λ a → idp })
+    GroupHom-equiv-GroupHom' = ((λ hom → (GroupHom.f hom) , (GroupHom.pres-comp hom)) ,
+                               record { g =  (λ hom' → group-hom (fst hom') (snd hom'))
+                                      ; f-g = λ b → idp ; g-f = λ a → idp ; adj = λ a → idp })
 
-    {- For two homomorphisms of type GroupHom', if their underlying map is equal, than the homomorphisms are equal -}
+    {- For two homomorphisms of type GroupHom', if their underlying map is equal, than the
+       homomorphisms are equal.
+    -}
     map-determ-hom' : {hom1 hom2 : GroupHom' G H} → (fst hom1 == fst hom2) → (hom1 == hom2)
-    map-determ-hom' {hom1} {hom2} idp = pair= idp (λ= (λ g₁ → λ= λ g₂ → prop-path (paths-are-props (Group.set H)) (snd hom1 g₁ g₂) (snd hom2 g₁ g₂) ))
+    map-determ-hom' {hom1} {hom2} idp =
+      pair= idp (λ= (λ g₁ → λ= λ g₂ → prop-path (paths-are-props (Group.set H))
+                                                (snd hom1 g₁ g₂) (snd hom2 g₁ g₂)))
 
     {- Map determines homomorphism for type GroupHom -}
-    map-determ-hom : {hom1 hom2 : GroupHom G H} → (GroupHom.f hom1 == GroupHom.f hom2) → (hom1 == hom2)
+    map-determ-hom : {hom1 hom2 : GroupHom G H} → (GroupHom.f hom1 == GroupHom.f hom2)
+                   → (hom1 == hom2)
     map-determ-hom {hom1} {hom2} idp = path
       where
         open is-equiv (Σ.snd GroupHom-equiv-GroupHom')
@@ -66,16 +78,22 @@ module _ where
 
   {- Now, using the fact that equivalences are propositions we can prove that two isomorphisms are
      equal whenever their homomorphisms is equal. -}
-  iso-equiv2 : {G H : Group {α}} → {iso₁ iso₂ : G ≃ᴳ H} → (p : Σ.fst iso₁ == Σ.fst iso₂) → iso₁ == iso₂
-  iso-equiv2 {G} {H} {.(fst iso₂) , snd} {iso₂} idp = pair= idp (prop-path is-equiv-is-prop snd (Σ.snd iso₂))
+  iso-equiv2 : {G H : Group {α}} → {iso₁ iso₂ : G ≃ᴳ H} → (p : Σ.fst iso₁ == Σ.fst iso₂)
+             → iso₁ == iso₂
+  iso-equiv2 {G} {H} {.(fst iso₂) , snd} {iso₂} idp =
+    pair= idp (prop-path is-equiv-is-prop snd (Σ.snd iso₂))
 
-  {- This again implies that isomorphisms are equal if the underlying map of their homomorphism is equal -}
-  iso-equiv : {G H : Group {α}} → {iso₁ iso₂ : G ≃ᴳ H} → (p : GroupHom.f (Σ.fst iso₁) == GroupHom.f (Σ.fst iso₂)) → iso₁ == iso₂
+  {- This again implies that isomorphisms are equal if the underlying map of their homomorphism is
+     equal
+  -}
+  iso-equiv : {G H : Group {α}} → {iso₁ iso₂ : G ≃ᴳ H}
+            → (p : GroupHom.f (Σ.fst iso₁) == GroupHom.f (Σ.fst iso₂)) → iso₁ == iso₂
   iso-equiv p = iso-equiv2 (map-determ-hom p)
 
-  {- We can use the fact proven in the goal 1 file that idtoiso when given the identity path returns
-     an isomorphism of which the underlying map is the identity map. Since this characterizes the whole
-     isomorphism, we can now easilty show that idtoiso idp == idtoiso' idp -}
+  {- We can use the fact proven in the goal 1 file that idtoiso when given the identity path
+     returns an isomorphism of which the underlying map is the identity map. Since this
+     characterizes the whole isomorphism, we can now easilty show that idtoiso idp == idtoiso' idp
+  -}
   idtoiso-idp-equiv : {G : Group {α}} →  idtoiso idp == idtoiso' idp
   idtoiso-idp-equiv {G} = iso-equiv (idtoiso-idp-gives-id-map {α} {G})
 
@@ -94,7 +112,9 @@ module _ {G : Group} {H : Group} where
 
   {- Using a homomorphism from H to G, we can transform any subgroup of G into a subgroup of H -}
   lift-hom-over-subgrp : (hom : H →ᴳ G) → (Subgrp G → Subgrp  H)
-  lift-hom-over-subgrp hom sub-g = record { prop = prop-lemma  ; f = λ {a} → f-lemma a ; id =  id-lemma ; comp =  λ {a} {b} → comp-lemma a b; inv = λ {a} → inv-lemma a}
+  lift-hom-over-subgrp hom sub-g = record { prop = prop-lemma ; f = λ {a} → f-lemma a
+                                          ; id = id-lemma ; comp =  λ {a} {b} → comp-lemma a b
+                                          ; inv = λ {a} → inv-lemma a}
     where
       open Subgrp sub-g
       open GroupHom hom renaming (f to h-to-g)
@@ -155,7 +175,8 @@ module _ where
 
     {- We show that any two is-subgrp proofs of the same prop function must be equal. To show this,
        we make use of the fact that is-prop holds for any prop -}
-    any-isg-with-same-prop-are-equal : {G : Group {α}} {pr : (Group.U G) → Set α} (isg1 isg2 : is-subgrp {G} pr) → (isg1 == isg2)
+    any-isg-with-same-prop-are-equal : {G : Group {α}} {pr : (Group.U G) → Set α}
+                                       (isg1 isg2 : is-subgrp {G} pr) → (isg1 == isg2)
     any-isg-with-same-prop-are-equal {G} isg1 isg2 = =lemma isg1 isg2 f-eq id-eq comp-eq inv-eq
       where
         open is-subgrp
@@ -166,25 +187,35 @@ module _ where
         id-eq = prop-path (f isg1 (Group.e G)) (id isg1) (id isg2)
 
         comp-eq : comp isg1 == comp isg2
-        comp-eq = λ= (λ a → λ= (λ b → λ= (λ x → λ= λ y → prop-path (f isg1 (Group.comp G a b)) (comp isg1 a b x y) (comp isg2 a b x y))))
+        comp-eq = λ= (λ a → λ= (λ b → λ= (λ x → λ= λ y →
+          prop-path (f isg1 (Group.comp G a b)) (comp isg1 a b x y) (comp isg2 a b x y))))
 
         inv-eq : inv isg1 == inv isg2
-        inv-eq = λ= (λ a → λ= (λ b → prop-path (f isg1 (Group.i G a)) (inv isg1 a b) (inv isg2 a b)))
+        inv-eq = λ= (λ a → λ= (λ b →
+          prop-path (f isg1 (Group.i G a)) (inv isg1 a b) (inv isg2 a b)))
 
-        =lemma : {G : Group {α}} {pr : (Group.U G) → Set α} (isg1 isg2 : is-subgrp {G} pr) (eq1 : f isg1 == f isg2) (eq2 : id isg1 == id isg2) (eq3 : comp isg1 == comp isg2) (eq4 : inv isg1 == inv isg2) → (isg1 == isg2)
-        =lemma record { f = .(f isg2) ; id = .(id isg2) ; comp = .(comp isg2) ; inv = .(inv isg2) } isg2 idp idp idp idp = idp
+        =lemma : {G : Group {α}} {pr : (Group.U G) → Set α} (isg1 isg2 : is-subgrp {G} pr)
+                 (eq1 : f isg1 == f isg2) (eq2 : id isg1 == id isg2) (eq3 : comp isg1 == comp isg2)
+                 (eq4 : inv isg1 == inv isg2) → (isg1 == isg2)
+        =lemma record { f = .(f isg2) ; id = .(id isg2) ; comp = .(comp isg2) ; inv = .(inv isg2) }
+               isg2 idp idp idp idp = idp
 
     {- Now we can prove using the lemma above that if there is a path between the prop's, there also
        is a path between the transported version of the accompanying is-subgrp proofs -}
-    path-prop-implies-path-isg : {G : Group {α}} (pr1 pr2 : (Group.U G) → Set α) (p : pr1 == pr2) (subgr1 : is-subgrp {G} pr1) (subgr2 : is-subgrp {G} pr2) → (transport is-subgrp p subgr1 == subgr2)
-    path-prop-implies-path-isg pr1 pr2 p subgr1 subgr2 = any-isg-with-same-prop-are-equal (transport is-subgrp p subgr1) subgr2
+    path-prop-implies-path-isg : {G : Group {α}} (pr1 pr2 : (Group.U G) → Set α) (p : pr1 == pr2)
+                                 (subgr1 : is-subgrp {G} pr1) (subgr2 : is-subgrp {G} pr2)
+                               → (transport is-subgrp p subgr1 == subgr2)
+    path-prop-implies-path-isg pr1 pr2 p subgr1 subgr2 =
+      any-isg-with-same-prop-are-equal (transport is-subgrp p subgr1) subgr2
 
     {- Using the above, it now becomes easy to show that if the prop's of a subgrp' are equal, then
        the whole subgrp's must be equal -}
     subgrp'-eq : {G : Group {α}} (a b : subgrp' {G}) (p : Σ.fst a == Σ.fst b) → (a == b)
-    subgrp'-eq a b p = subgrp'= a b p (path-prop-implies-path-isg (Σ.fst a) (Σ.fst b) p (Σ.snd a) (Σ.snd b))
+    subgrp'-eq a b p =
+        subgrp'= a b p (path-prop-implies-path-isg (Σ.fst a) (Σ.fst b) p (Σ.snd a) (Σ.snd b))
       where
-        subgrp'= : {G : Group {α}} (a b : subgrp' {G}) (p : Σ.fst a == Σ.fst b) (pt : (transport is-subgrp p (Σ.snd a)) == (Σ.snd b)) → (a == b)
+        subgrp'= : {G : Group {α}} (a b : subgrp' {G}) (p : Σ.fst a == Σ.fst b)
+                   (pt : (transport is-subgrp p (Σ.snd a)) == (Σ.snd b)) → (a == b)
         subgrp'= (fst₁ , snd₁) (.fst₁ , .snd₁) idp idp = idp
 
     {- Finally, we need to convert the subgrp'eq proof into a proof about Subgrp, so we will show
@@ -193,10 +224,13 @@ module _ where
     subgrp-subgrp'-equiv G = f , (record { g = g ; f-g = f-g ; g-f = g-f ; adj = λ a → idp })
       where
         f : Subgrp G → subgrp' {G}
-        f record { prop = prop ; f = f ; id = id ; comp = comp ; inv = inv } = prop , record {f = λ a → f {a} ; id = id; comp = λ a b → comp {a} {b}; inv = λ a → inv {a}}
+        f record { prop = prop ; f = f ; id = id ; comp = comp ; inv = inv } = prop ,
+          record {f = λ a → f {a} ; id = id; comp = λ a b → comp {a} {b}; inv = λ a → inv {a}}
 
         g : subgrp' {G} → Subgrp G
-        g (prop , record { f = f ; id = id ; comp = comp ; inv = inv }) = record{ prop = prop ; f = λ {a} → f a ; id = id ; comp = λ {a} {b} → comp a b ; inv = λ {a} → inv a}
+        g (prop , record { f = f ; id = id ; comp = comp ; inv = inv }) =
+          record{ prop = prop ; f = λ {a} → f a ; id = id ; comp = λ {a} {b} → comp a b
+                ; inv = λ {a} → inv a}
 
         f-g : (b : subgrp') → f (g b) == b
         f-g b = idp
@@ -236,21 +270,24 @@ module _  (f : (G : Group {α}) → (Subgrp G)) where
     iso-id-equiv {G} {H} iso = is-equiv.g-f (snd (iso≃id {α} {G} {H})) iso
 
     {- We furthermore need apd as a lemma -}
-    apd2 : {l k : ULevel} {X : Set l} {Y : X → Set k} {x x' : X} (f : (x : X) → Y x) (p : x == x') → (transport Y p (f x) ) == f x'
+    apd2 : {l k : ULevel} {X : Set l} {Y : X → Set k} {x x' : X} (f : (x : X) → Y x) (p : x == x')
+         → (transport Y p (f x) ) == f x'
     apd2 f idp = idp
 
-    {- We first prove that if we have a path from G to H that the lift-iso-over-subgrp function essentially
-       does the same as just transporting it. We use here that idtoiso is equivalent to our easier idtoiso',
-       which is definitionally equal to transporting the path -}
-    lift-aut-lemma1 : {G H : Group} (p : G == H) → (lift-iso-over-subgrp (idtoiso p)) == (transport Subgrp  p)
+    {- We first prove that if we have a path from G to H that the lift-iso-over-subgrp function
+       essentially does the same as just transporting it. We use here that idtoiso is equivalent to
+       our easier idtoiso', which is definitionally equal to transporting the path -}
+    lift-aut-lemma1 : {G H : Group} (p : G == H)
+                    → (lift-iso-over-subgrp (idtoiso p)) == (transport Subgrp  p)
     lift-aut-lemma1 {G} {H} idp =
       lift-iso-over-subgrp (idtoiso idp) =⟨ ap lift-iso-over-subgrp idtoiso-idp-equiv ⟩
       lift-iso-over-subgrp (idtoiso' idp) =⟨ λ= (λ g → subgrp-eq idp) ⟩
       transport Subgrp idp =∎
 
-    {- Now we make use of the iso-id-equiv to show that the same holds if we now have an automorphism
-       instead of a path. -}
-    lift-aut-lemma2 : {G : Group} (aut : G ≃ᴳ G) → lift-iso-over-subgrp aut == transport Subgrp (isotoid aut)
+    {- Now we make use of the iso-id-equiv to show that the same holds if we now have an
+       automorphism instead of a path. -}
+    lift-aut-lemma2 : {G : Group} (aut : G ≃ᴳ G)
+                    → lift-iso-over-subgrp aut == transport Subgrp (isotoid aut)
     lift-aut-lemma2 {G} aut =
         lift-iso-over-subgrp aut =⟨ ap lift-iso-over-subgrp (! (iso-id-equiv {G} {G} aut)) ⟩
         lift-iso-over-subgrp (idtoiso (isotoid aut)) =⟨ lift-aut-lemma1 ((isotoid aut)) ⟩
@@ -282,9 +319,12 @@ module ConjAut {G : Group {α}} where
     conj-map-inv : (a : U) → (conj-map a) ∘ (conj-map (i a)) == idf U
     conj-map-inv a = λ= (λ x →
       (conj-map a (conj-map (i a) x)) =⟨ idp ⟩
-      a · (( (i a) · (x · (i (i a))) ) · (i a)) =⟨ ! (associative a ((i a) · (x · (i (i a)))) (i a)) ⟩
-      (a · ( (i a) · (x · (i (i a))) )) · (i a) =⟨ ap (λ y → y · (i a)) (! (associative a (i a) (x · (i (i a))))) ⟩
-      (( a · (i a)) · (x · (i (i a))) ) · (i a) =⟨ ap (λ y → (y · (x · (i (i a))) ) · (i a)) (inv-r a) ⟩
+      a · (( (i a) · (x · (i (i a))) ) · (i a))
+        =⟨ ! (associative a ((i a) · (x · (i (i a)))) (i a)) ⟩
+      (a · ( (i a) · (x · (i (i a))) )) · (i a)
+        =⟨ ap (λ y → y · (i a)) (! (associative a (i a) (x · (i (i a))))) ⟩
+      (( a · (i a)) · (x · (i (i a))) ) · (i a)
+        =⟨ ap (λ y → (y · (x · (i (i a))) ) · (i a)) (inv-r a) ⟩
       (e · (x · (i (i a))) ) · (i a) =⟨ ap (λ y → y · (i a)) (unit-l (x · (i (i a)))) ⟩
       (x · (i (i a))) · (i a) =⟨ associative x (i (i a)) (i a) ⟩
       x · ((i (i a)) · (i a)) =⟨ ap (λ y → x · y) (inv-l (i a)) ⟩
@@ -299,9 +339,12 @@ module ConjAut {G : Group {α}} where
         a · ((g₁ · g₂) · (i a)) =⟨ ap (λ ϕ → a · ϕ) (associative g₁ g₂ (i a)) ⟩
         a · (g₁ · (g₂ · (i a))) =⟨ ap (λ ϕ → a · (g₁ · ϕ)) (! (unit-l ((g₂ · (i a))))) ⟩
         a · (g₁ · ( e · (g₂ · (i a)))) =⟨ ap (λ ϕ → a · (g₁ · (ϕ · (g₂ · (i a))))) (! (inv-l a)) ⟩
-        a · (g₁ · (((i a) · a ) · (g₂ · (i a)))) =⟨ ap (λ ϕ → a · (g₁ · ϕ) ) (associative (i a) a (g₂ · (i a))) ⟩
-        a · (g₁ · ((i a) ·(a · (g₂ · (i a))))) =⟨ ap (λ ϕ → a · ϕ) (! (associative g₁ ((i a)) ((a · (g₂ · (i a)))))) ⟩
-        a · ((g₁ · (i a)) ·(a · (g₂ · (i a)))) =⟨ ! (associative a ((g₁ · (i a))) ((a · (g₂ · (i a))))) ⟩
+        a · (g₁ · (((i a) · a ) · (g₂ · (i a))))
+          =⟨ ap (λ ϕ → a · (g₁ · ϕ) ) (associative (i a) a (g₂ · (i a))) ⟩
+        a · (g₁ · ((i a) ·(a · (g₂ · (i a)))))
+          =⟨ ap (λ ϕ → a · ϕ) (! (associative g₁ ((i a)) ((a · (g₂ · (i a)))))) ⟩
+        a · ((g₁ · (i a)) ·(a · (g₂ · (i a))))
+          =⟨ ! (associative a ((g₁ · (i a))) ((a · (g₂ · (i a))))) ⟩
         (a · (g₁ · (i a))) ·(a · (g₂ · (i a))) =∎
 
       conj-hom : GroupHom G G
@@ -310,12 +353,14 @@ module ConjAut {G : Group {α}} where
       {- Now we want to prove that conj-map is also an isomorphism -}
       conj-hom-g-f : (b : U) → (conj-map (i a) (conj-map a b)) == b
       conj-hom-g-f b =
-        conj-map (i a) (conj-map a b) =⟨ ap (λ ϕ → conj-map (i a) (conj-map ϕ b)) (! (inv-inv-is-unit a)) ⟩
+        conj-map (i a) (conj-map a b)
+          =⟨ ap (λ ϕ → conj-map (i a) (conj-map ϕ b)) (! (inv-inv-is-unit a)) ⟩
         conj-map (i a) (conj-map (i (i a)) b) =⟨ funqeq (conj-map-inv (i a)) b ⟩
         b =∎
 
       conj-hom-is-equiv : is-equiv (conj-map a)
-      conj-hom-is-equiv = is-eq (conj-map a) (conj-map (i a)) (λ b → funqeq (conj-map-inv a) b) (conj-hom-g-f)
+      conj-hom-is-equiv =
+        is-eq (conj-map a) (conj-map (i a)) (λ b → funqeq (conj-map-inv a) b) (conj-hom-g-f)
 
   conj-aut : (a : U) → G ≃ᴳ G
   conj-aut a = conj-hom a , conj-hom-is-equiv a
@@ -335,19 +380,22 @@ module normal-to-normal' {G : Group {α}} {H : Subgrp G} where
   open Subgrp
 
   private
-  {- the following function takes the subgroup H < G and produces for an element (a : G) the conjugated
-     subgroup aH(i a), that is, it applies the lifted conjugation automorphism to the subgroup. We
-     denote this as φₐ[H] where φₐ : G → G : x ↦ a · x · (i a) -}
+  {- the following function takes the subgroup H < G and produces for an element (a : G) the
+     conjugated subgroup aH(i a), that is, it applies the lifted conjugation automorphism to the
+     subgroup. We denote this as φₐ[H] where φₐ : G → G : x ↦ a · x · (i a) -}
     conj-subgr : (a : U) → Subgrp G
     conj-subgr a =  lift-iso-over-subgrp (ConjAut.conj-aut {G} a) H
 
     {- Here we show that if two groups G and G' are isomorphic, the isomorphism preserves subgroups.
        Basically we prove that map-lift of an isomorphism does exactly what it is supposed to do  -}
-    iso-lift-prop-comp : {G' : Group {α}} → (iso : G ≃ᴳ G') → (h : U) → prop H h → prop ((lift-iso-over-subgrp iso) H) ((GroupHom.f (fst iso)) h)
+    iso-lift-prop-comp : {G' : Group {α}} → (iso : G ≃ᴳ G') → (h : U) → prop H h
+                       → prop ((lift-iso-over-subgrp iso) H) ((GroupHom.f (fst iso)) h)
     iso-lift-prop-comp iso h proph = coe (ap (prop H) (! (is-equiv.g-f (snd iso) h))) proph
 
-    {- As a specific instance of the previous lemma, we can show that φₐ[H], the subgroup H lifted over
-       the conjugacy automorphism (conj-aut a), contains all the elements of the form a · h · (i a) for h in H-}
+    {- As a specific instance of the previous lemma, we can show that φₐ[H], the subgroup H lifted
+       over the conjugacy automorphism (conj-aut a), contains all the elements of the form
+       a · h · (i a) for h in H
+    -}
     lift-subgr-conj : (a : U) → (h : U) → prop H h → prop (conj-subgr a) (a · (h · (i a)))
     lift-subgr-conj a h proph = iso-lift-prop-comp {G} (ConjAut.conj-aut {G} a ) h proph
 
@@ -356,42 +404,49 @@ module normal-to-normal' {G : Group {α}} {H : Subgrp G} where
     eq-subgrps-have-eq-props idp = idp
 
     eq-props-elts : {N : Subgrp G} → (p : prop N == prop H) → (a : U) → (prop N a) → (prop H a)
-    eq-props-elts {N = record { prop = prop ; f = f ; id = id ; comp = comp ; inv = inv }} idp a = coe idp
+    eq-props-elts idp a = coe idp
 
-  {- We can now prove that is-normal' implies is-normal. We are given elements (a : G) and (h : H) and
-     we want to prove that a · h · (i a) is in H. Using (is-normal' a) we have a proof that φₐ[H] == H
-     as subgroups of G, where φₐ : G → G : x ↦ a · x · (ia) is the conjugation map for a. Therefore,
-     their props are equal, and from the 'lift-subgr-conj' lemma we can deduce that a · h · (i a) is
-     in φₐ[H], hence we can conclude that it is also in H -}
+  {- We can now prove that is-normal' implies is-normal. We are given elements (a : G) and (h : H)
+     and we want to prove that a · h · (i a) is in H. Using (is-normal' a) we have a proof that
+     φₐ[H] == H as subgroups of G, where φₐ : G → G : x ↦ a · x · (ia) is the conjugation map for
+     a. Therefore, their props are equal, and from the 'lift-subgr-conj' lemma we can deduce that
+     a · h · (i a) is in φₐ[H], hence we can conclude that it is also in H -}
   is-normal'-to-is-normal : is-normal' H → is-normal H
-  is-normal'-to-is-normal Hnorm' = λ a h proph →  eq-props-elts {conj-subgr a} (eq-subgrps-have-eq-props (Hnorm' a)) ((a · (h · (i a)))) (lift-subgr-conj a h proph)
+  is-normal'-to-is-normal Hnorm' = λ a h proph → eq-props-elts {conj-subgr a}
+    (eq-subgrps-have-eq-props (Hnorm' a)) ((a · (h · (i a)))) (lift-subgr-conj a h proph)
 
 
 {- Finally, we prove the second goal of the project in two steps -}
-{- Firstly, we show that definable subgroups are normal', according to our alternative defition of normal subgroups.
-   This follows straight from the machinery that we set up earlier in the file, namely the fact that for all group
-   isomorphism φ : G → H we have φ[f G] == f G. In particular, we can apply this to the conjugation automorphisms
-   that we are using in our alternative definition of is-normal' -}
-def-subgroups-are-normal' : (f : (G : Group {α}) → (Subgrp G)) → (G' : Group {α}) → (is-normal' (f G'))
+{- Firstly, we show that definable subgroups are normal', according to our alternative defition of
+   normal subgroups. This follows straight from the machinery that we set up earlier in the file,
+   namely the fact that for all group isomorphism φ : G → H we have φ[f G] == f G. In particular,
+   we can apply this to the conjugation automorphisms that we are using in our alternative
+   definition of is-normal' -}
+def-subgroups-are-normal' : (f : (G : Group {α}) → (Subgrp G)) → (G' : Group {α})
+                          → (is-normal' (f G'))
 def-subgroups-are-normal' f G' =  λ a → lift-aut-retains-subgrp f (ConjAut.conj-aut a)
 
-{- Lastly, using the is-normal-to-is-normal' function that we set up in the previous module we can prove
-   our final goal, that all definable subgroups are normal in HoTT -}
-def-subgroups-are-normal : (f : (G : Group {α}) → (Subgrp G)) → (G' : Group {α}) → (is-normal (f G'))
-def-subgroups-are-normal f G' = normal-to-normal'.is-normal'-to-is-normal {G'} {f G'} (def-subgroups-are-normal' f G')
+{- Lastly, using the is-normal-to-is-normal' function that we set up in the previous module we can
+   prove our final goal, that all definable subgroups are normal in HoTT -}
+def-subgroups-are-normal : (f : (G : Group {α}) → (Subgrp G)) → (G' : Group {α})
+                         → (is-normal (f G'))
+def-subgroups-are-normal f G' = normal-to-normal'.is-normal'-to-is-normal {G'} {f G'}
+                                  (def-subgroups-are-normal' f G')
 
 
 
 {- EXAMPLE : CENTER -}
 
 {- We will need the following auxiliary lemma later on -}
-prop-dep-prod : {l j : ULevel} {X : Set l} {Y : X → Set j} (ihp : (x : X) → is-prop (Y x)) → is-prop ((x : X) → Y x)
+prop-dep-prod : {l j : ULevel} {X : Set l} {Y : X → Set j} (ihp : (x : X) → is-prop (Y x))
+              → is-prop ((x : X) → Y x)
 prop-dep-prod ihp = all-paths-is-prop (λ f g → λ= (λ x → prop-path (ihp x) (f x) (g x)))
 
 {- We show that the center is a definable subgroup, that is, can be uniformly defined as a
    dependent type, depending on the group G -}
 center : (G : Group {α}) → Subgrp G
-center G = record { prop = λ g → in-center g ; f = in-center-is-prop ; id = unit-in-center ; comp = center-closed-comp ; inv = center-closed-inv }
+center G = record { prop = λ g → in-center g ; f = in-center-is-prop ; id = unit-in-center
+                  ; comp = center-closed-comp ; inv = center-closed-inv }
   where
     open Group G
 
@@ -427,6 +482,7 @@ center G = record { prop = λ g → in-center g ; f = in-center-is-prop ; id = u
       (i a) · (i (i h)) =⟨ ap (λ φ → (i a) · φ) (inv-inv-is-unit h) ⟩
       (i a) · h =∎
 
-{- Thus, using the main theorem that we proved in this goal, we can show that the center is normal -}
+{- Thus, using the main theorem that we proved in this goal, we can show that the center is normal
+-}
 center-is-normal : {G : Group {α}} → is-normal (center G)
 center-is-normal {G} = def-subgroups-are-normal center G
