@@ -19,7 +19,7 @@ module Group-basics where
    G3: x · x−1 ≈ x−1 · x ≈ 1
 -}
 
-{- Prove that we can weaken the axioms for a group (G; ∗) as
+{- We can weaken the axioms for a group (G; ∗) as
    follows.
    1. The binary operation is associative.
    2. There exists a left identity e in G such that ex = x for all x 2 G.
@@ -27,9 +27,10 @@ module Group-basics where
 -}
 module _ {α : ULevel} where
 
+  {- In this module we define the properties that a group ought to have -}
   module Properties where
 
-    {- Definition of the properties that a group has. -}
+    {- Definition of the properties that a group has. We take the axioms as weak as possible. -}
     is-associative : {X : Type α} (_⋆_ : X → X → X) → Type α
     is-associative {X} _⋆_ = ((a b c : X) → ((a ⋆ b) ⋆ c) == (a ⋆ (b ⋆ c)))
 
@@ -45,17 +46,20 @@ module _ {α : ULevel} where
     has-inverse-l : {X : Type α} (_⋆_ : X → X → X) (e : X) → Type α
     has-inverse-l {X} _⋆_ e = Σ (X → X) (is-inverse-l _⋆_ e)
 
+    {- We define when a Magma is a group. We use sigma types instead of a record type for more compatibility with the library  -}
     is-group : Magma → Type α
     is-group M =  is-associative (Magma._∗_ M) × is-set (Magma.X M)
                × (Σ (has-unit-l (Magma._∗_ M))
                     λ { (e , isUnit) → has-inverse-l (Magma._∗_ M) e})
 
+  {- We define a group as a Magma with the additional structure above -}
   record Group : Set (lsucc α) where
     constructor group
     field
       M : Magma
       is-group : Properties.is-group M
 
+    {- For convenience we extract all the useful fields of a group, so that we don't have to extract them every time from the sigma types -}
     U : Type α
     U = Magma.X M
 
@@ -82,6 +86,8 @@ module _ {α : ULevel} where
     set : is-set U
     set = (fst ∘ snd) is-group
 
+    {- We use equational reasoning to prove basic group-theoretical lemma's based on the axioms -}
+    {- A left inverse is also a right inverse -}
     inv-r : (a : U) → (a · (i a)) == e
     inv-r a =
         a · (i a)
@@ -103,6 +109,7 @@ module _ {α : ULevel} where
         e
       =∎
 
+    {- A left unit is also a right unit -}
     unit-r : (a : U) → (a · e) == a
     unit-r a =
         a · e
@@ -116,7 +123,7 @@ module _ {α : ULevel} where
         a
       =∎
 
-      {- Solving an equation -}
+    {- Solving an equation part 1 -}
     solv : (a b x : U) → (x == ((i a) · b)) → ((a · x) == b)
     solv a b x eq =
       (a · x)
@@ -144,6 +151,7 @@ module _ {α : ULevel} where
       (i a) · b
       =∎
 
+    {- Solving an equation part 3 : solutions to an equation are unique -}
     unique-solve : ∀ a b x y → (a · x) == b → (a · y) == b → x == y
     unique-solve a b x y p q =
       x =⟨ unique-solv a b x p ⟩
@@ -164,9 +172,11 @@ module _ {α : ULevel} where
       a · e =⟨ unit-r a ⟩
       a =∎
 
+    {- Inverses are unique -}
     inv-is-unique : ∀ a i' → ((a · i') == e) → (i' == (i a))
     inv-is-unique a i' p = unique-solve a e i' (i a) p (inv-r a)
 
+    {- the inverse of (a · b) is equal to (i b) · (i a) -}
     inv-of-comp : ∀ a b → ((i b) · (i a)) == (i (a · b))
     inv-of-comp a b = inv-is-unique (a · b) ((i b) · (i a)) path
       where
@@ -179,26 +189,30 @@ module _ {α : ULevel} where
           a · (i a) =⟨ inv-r a ⟩
           e =∎
 
+  {- We define the type subgroup, it is a dependent type, depending on the group G -}
   record Subgrp (G : Group) : Set (lsucc α) where
     private
       module G = Group G
     field
-      prop : G.U → Set α
-      f : ∀ {a : G.U} → is-prop( prop a)
-      id : prop G.e
-      comp : ∀ {a b : G.U} → prop a → prop b → prop (G.comp a b)
-      inv : ∀ {a : G.U} → prop a → prop (G.i a)
+      prop : G.U → Set α --the function selects the elements in the subgroup, as general as possible 
+      f : ∀ {a : G.U} → is-prop( prop a) -- the selection function has to map to a proposition
+      id : prop G.e -- unit has to be in the subgroup
+      comp : ∀ {a b : G.U} → prop a → prop b → prop (G.comp a b) --subgroup closed under group product
+      inv : ∀ {a : G.U} → prop a → prop (G.i a) --subgroup closed under inverses
 
+    {- If two subgroups are equal, then their props are equivalent -}
     prop-equality : ∀ a b → (a == b) → prop a → prop b
     prop-equality a .a idp aprop = aprop
 
-  {- Normal subgroups : -}
-  is-normal : {Grp : Group} → (Subgrp Grp) → Set α
-  is-normal {Grp} H = (g : U) → (h : U) → prop h → prop (g ·ᴳ (h ·ᴳ (iᴳ g)))
+  {- Definition of normal subgroups. A dependent type, depending on a group G (implicit) and a subgroup H of type Subgrp G -}
+  {- We use the most common definition : ∀ g ∈ G, ∀ h ∈ H : g · h · (i g) ∈ H -}
+  is-normal : {G : Group} → (Subgrp G) → Set α
+  is-normal {G} H = (g : U) → (h : U) → prop h → prop (g ·ᴳ (h ·ᴳ (iᴳ g)))
     where
-      open Group Grp renaming (comp to _·ᴳ_; i to iᴳ)
+      open Group G renaming (comp to _·ᴳ_; i to iᴳ)
       open Subgrp H renaming (comp to _·ᴴ_)
 
+{- Definition of the type group homomorphism G →ᴳ H, a dependent type, depending on two groups G and H -}
 record GroupHom {α β : ULevel} (G : Group {α}) (H : Group {β}) : Set (lmax α β) where
   constructor group-hom
   private
@@ -208,10 +222,11 @@ record GroupHom {α β : ULevel} (G : Group {α}) (H : Group {β}) : Set (lmax �
     _·ᴴ_ = H.comp
 
   field
-    f : G.U → H.U
-    pres-comp : ∀ g₁ g₂ → f (G.comp g₁ g₂) == H.comp (f g₁) (f g₂)
+    f : G.U → H.U --underlying map of the homomorphism
+    pres-comp : ∀ g₁ g₂ → f (G.comp g₁ g₂) == H.comp (f g₁) (f g₂) --condition that it preserves the group structure 
 
   private
+    {- a homomorphism respects group product and inverses -}
     prod-with-inv : (x y : G.U) → f (x ·ᴳ (G.i y)) == ((f x) ·ᴴ H.i (f y))
     prod-with-inv x y =
         f (x ·ᴳ (G.i y))
@@ -239,7 +254,7 @@ record GroupHom {α β : ULevel} (G : Group {α}) (H : Group {β}) : Set (lmax �
           =∎
 
   abstract
-    {- Lemma: every homomorphism maps the identity to the identity -}
+    {- A homomorphism maps the identity to the identity -}
     id-to-id : (f G.e == H.e)
     id-to-id =
           f G.e
@@ -251,7 +266,7 @@ record GroupHom {α β : ULevel} (G : Group {α}) (H : Group {β}) : Set (lmax �
           H.e
         =∎
 
-    {- Preserves inverse -}
+    {- A homomorphism preserves inverses -}
     pres-i : ∀ g → f (G.i g) == H.i (f g)
     pres-i g =
         f (G.i g)
@@ -265,19 +280,25 @@ record GroupHom {α β : ULevel} (G : Group {α}) (H : Group {β}) : Set (lmax �
         H.i (f g)
       =∎
 
+{- we introduce some useful infix notation for homomorphisms -}
 infix 0 _→ᴳ_
 _→ᴳ_ = GroupHom
 
+{- gives the trivial automorphism for a group G -}
 →ᴳ-id : {α : ULevel} {G : Group {α}} → G →ᴳ G
 →ᴳ-id = group-hom (λ x → x) (λ g₁ g₂ → idp)
 
+{- composition of two homomorphisms is again a homomorphism -}
 →ᴳ-trans : {α β γ : ULevel} {G : Group {α}} {H : Group {β}} {J : Group {γ}} → (G →ᴳ H) → (H →ᴳ J) → (G →ᴳ J)
 →ᴳ-trans (group-hom g p) (group-hom h q) =
   group-hom (λ z → h (g z)) (λ a b → (ap h (p a b)) ∙ (q (g a) (g b)))
 
+{- definition of isomorphism G ≃ᴳ H: a homomorphism G →ᴳ H + a proof that the underlying map is an equivalence, so we have a bijection -}
 _≃ᴳ_ : {α β : ULevel} (G : Group {α}) (H : Group {β}) → Set (lmax α β)
 G ≃ᴳ H = Σ (G →ᴳ H) (λ φ → is-equiv (GroupHom.f φ))
 infix 100 _≃ᴳ_
+
+{- In this module we define and prove some things for isomorphism -}
 module _≃ᴳ_ {α β : ULevel} {G : Group {α}} {H : Group {β}} (iso : G ≃ᴳ H) where
   open Group H renaming (comp to _·ᴴ_)
   open Group G renaming (comp to _·ᴳ_)
@@ -285,12 +306,13 @@ module _≃ᴳ_ {α β : ULevel} {G : Group {α}} {H : Group {β}} (iso : G ≃�
   open is-equiv (Σ.snd iso)
 
   private
-    {- Action path over binary function. -}
+    {- Auxiliary lemma : Action path over binary function. -}
     ap2 : ∀ {i j k} {X : Set i} {Y : Set j} {Z : Set k} {x x' : X} {y y' : Y}
         (p : x == x') (q : y == y') {rel : X → Y → Z}
         → rel x y == rel x' y'
     ap2 idp idp = idp
 
+  {- The inverse map of the isomorphism also preserves computation -}
   preserves-comp : (a' b' : Group.U H) → g (a' ·ᴴ b') == (g a' ·ᴳ g b')
   preserves-comp a' b' =
       g (a' ·ᴴ b')
@@ -302,12 +324,14 @@ module _≃ᴳ_ {α β : ULevel} {G : Group {α}} {H : Group {β}} (iso : G ≃�
       (g a') ·ᴳ (g b')
     =∎
 
+  {- Extract homomorphisms going both ways from the isomorphism -}
   g-hom : H →ᴳ G
   g-hom = group-hom g preserves-comp
 
   f-hom : G →ᴳ H
   f-hom = Σ.fst iso
 
+  {- Isomorphism is reflexive -}
   sym : (H ≃ᴳ G)
   sym = g-hom , is-eq g f g-f f-g
 
