@@ -32,4 +32,4 @@ To prove this, we need a few supporting results. First of all, we characterize t
 
 Subsequently, we define inner automorphisms, so we can apply the previous result to inner automorphisms and derive normality of definable subgroups in the above sense. Moreover, we prove that this definition of normality implies the common definition of normality, which then completes the proof.
 
-Finally, we apply the main result to the example of the center of a group, showing that the center of a group is always a normal subgroup. This main result also allows us to prove the normality of other definable subgroups, such as the centralizer.
+Finally, we apply the main result to two examples: the center of a group and the commutator subgroup, showing that these are definable and hence always normal subgroups. This main result also allows us to prove the normality of other definable subgroups.
